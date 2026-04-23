@@ -21,9 +21,19 @@ def _fetch_categories() -> dict:
 # ── GET /problems/categories ─────────────────────────────────
 @router.get("/categories")
 def list_categories():
-    client = get_client()
-    res = client.table("categories").select("*").order("name").execute()
-    return res.data or []
+    svc = get_service_client()
+    cats = svc.table("categories").select("*").order("name").execute().data or []
+    # attach problem count per category
+    for cat in cats:
+        count_res = (
+            svc.table("problems")
+            .select("id", count="exact")
+            .eq("category_id", cat["id"])
+            .eq("is_active", True)
+            .execute()
+        )
+        cat["problem_count"] = count_res.count or 0
+    return cats
 
 
 # ── GET /problems/daily-set ───────────────────────────────────
