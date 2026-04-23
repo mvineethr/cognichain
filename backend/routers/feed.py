@@ -16,11 +16,23 @@ def get_feed(
 
     res = (
         svc.table("posts")
-        .select("*, profiles(username, avatar_url, rank_title)")
+        .select("*")
         .order("created_at", desc=True)
         .range(offset, offset + limit - 1)
         .execute()
     )
+    posts = res.data or []
+
+    user_ids = list({p["user_id"] for p in posts})
+    profiles = {}
+    if user_ids:
+        prof_res = (
+            svc.table("profiles")
+            .select("id, username, avatar_url, rank_title")
+            .in_("id", user_ids)
+            .execute()
+        )
+        profiles = {p["id"]: p for p in (prof_res.data or [])}
 
     liked_res = (
         svc.table("post_likes")
@@ -31,8 +43,8 @@ def get_feed(
     liked_ids = {l["post_id"] for l in (liked_res.data or [])}
 
     result = []
-    for post in (res.data or []):
-        profile = post.pop("profiles", {}) or {}
+    for post in posts:
+        profile = profiles.get(post["user_id"], {})
         result.append({
             **post,
             "username":   profile.get("username", "Unknown"),
@@ -95,15 +107,27 @@ def get_comments(post_id: str, user: dict = Depends(get_current_user)):
 
     res = (
         svc.table("post_comments")
-        .select("*, profiles(username, avatar_url)")
+        .select("*")
         .eq("post_id", post_id)
         .order("created_at")
         .execute()
     )
+    raw_comments = res.data or []
+
+    comment_user_ids = list({c["user_id"] for c in raw_comments})
+    comment_profiles = {}
+    if comment_user_ids:
+        cp_res = (
+            svc.table("profiles")
+            .select("id, username, avatar_url")
+            .in_("id", comment_user_ids)
+            .execute()
+        )
+        comment_profiles = {p["id"]: p for p in (cp_res.data or [])}
 
     comments = []
-    for c in (res.data or []):
-        profile = c.pop("profiles", {}) or {}
+    for c in raw_comments:
+        profile = comment_profiles.get(c["user_id"], {})
         comments.append({
             **c,
             "username":   profile.get("username", "Unknown"),
