@@ -482,6 +482,55 @@ button.danger:hover { filter: brightness(1.1); }
 ::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #2a3a4e; }
 
+/* ── Guide hint animations ────────────────────────────────────── */
+@keyframes guideHintGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(110,231,168,0);
+    border-color: rgba(110,231,168,0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(110,231,168,0.15), 0 0 20px rgba(110,231,168,0.2);
+    border-color: rgba(110,231,168,0.8);
+  }
+}
+
+@keyframes guideTabBounce {
+  0%, 100% { transform: translateY(0); }
+  30%       { transform: translateY(-3px); }
+  60%       { transform: translateY(-1px); }
+}
+
+/* Desktop: glow on guide panel */
+.guide-hint-panel {
+  animation: guideHintGlow 2s ease-in-out infinite;
+  border-radius: 12px;
+  border: 1px solid rgba(110,231,168,0.3);
+}
+
+/* Desktop: "Need a hint?" button in solution card header */
+.guide-hint-desktop-btn {
+  background: rgba(110,231,168,0.1);
+  border: 1px solid rgba(110,231,168,0.35);
+  color: var(--accent);
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  animation: guideHintGlow 2s ease-in-out infinite;
+  transition: background 0.2s;
+}
+.guide-hint-desktop-btn:hover {
+  background: rgba(110,231,168,0.2);
+}
+
+/* Mobile: pulsing Guide tab */
+.solve-mobile-tabs button.guide-hint-tab {
+  color: var(--accent) !important;
+  background: rgba(110,231,168,0.1) !important;
+  animation: guideTabBounce 1.4s ease-in-out infinite, guideHintGlow 2s ease-in-out infinite;
+}
+
 /* ── Animations ───────────────────────────────────────────────── */
 @keyframes heartPop {
   0%   { transform: scale(1); }

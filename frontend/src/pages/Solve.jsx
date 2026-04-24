@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import GuideChat from '../components/GuideChat'
 
-// Switch to guide tab automatically when AI guide is opened on mobile
 const isMobile = () => window.innerWidth <= 768
 
 const DIFF_COLORS = {
@@ -12,6 +11,9 @@ const DIFF_COLORS = {
   expert:     'var(--diff-expert)',
   master:     'var(--diff-master)',
 }
+
+// How long before nudging user toward the guide (ms)
+const GUIDE_HINT_DELAY = 90_000 // 90 seconds
 
 function formatTime(secs) {
   const m = Math.floor(secs / 60)
@@ -30,11 +32,25 @@ export default function Solve() {
   const [result, setResult]         = useState(null)
   const [elapsed, setElapsed]       = useState(0)
   const [mobileTab, setMobileTab]   = useState('problem')
-  const startRef = useRef(Date.now())
-  const timerRef = useRef(null)
+  const [guideHint, setGuideHint]   = useState(false)   // ← hint state
 
+  const startRef    = useRef(Date.now())
+  const timerRef    = useRef(null)
+  const hintRef     = useRef(null)    // setTimeout for guide hint
+
+  // ── Start / clear the guide hint timer ────────────────────────
+  const startHintTimer = useCallback(() => {
+    clearTimeout(hintRef.current)
+    hintRef.current = setTimeout(() => setGuideHint(true), GUIDE_HINT_DELAY)
+  }, [])
+
+  const clearHint = useCallback(() => {
+    setGuideHint(false)
+    clearTimeout(hintRef.current)
+  }, [])
+
+  // ── On mount: load problem, start timers ───────────────────────
   useEffect(() => {
-    // Scroll to top on load (fixes mobile auto-scroll to bottom)
     window.scrollTo(0, 0)
 
     api.getProblem(id)
@@ -42,17 +58,40 @@ export default function Solve() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
 
-    // Start timer
+    // Elapsed timer
     timerRef.current = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
     }, 1000)
-    return () => clearInterval(timerRef.current)
+
+    // Guide hint timer
+    startHintTimer()
+
+    return () => {
+      clearInterval(timerRef.current)
+      clearTimeout(hintRef.current)
+    }
   }, [id])
 
+  // ── Open guide (clears hint, switches mobile tab) ──────────────
+  const openGuide = useCallback(() => {
+    clearHint()
+    setMobileTab('guide')
+  }, [clearHint])
+
+  // ── Resume elapsed timer ───────────────────────────────────────
+  const resumeTimer = useCallback(() => {
+    startRef.current = Date.now() - elapsed * 1000
+    timerRef.current = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
+    }, 1000)
+  }, [elapsed])
+
+  // ── Submit solution ────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!solution.trim()) { setError('Please enter a solution'); return }
     clearInterval(timerRef.current)
+    clearHint()
     setSubmitting(true)
     setError('')
     try {
@@ -66,19 +105,14 @@ export default function Solve() {
       if (res.is_correct) {
         setTimeout(() => navigate('/'), 2500)
       } else {
-        // Resume timer if wrong
-        startRef.current = Date.now() - elapsed * 1000
-        timerRef.current = setInterval(() => {
-          setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
-        }, 1000)
+        // Wrong — resume timer and restart hint countdown
+        resumeTimer()
+        startHintTimer()
       }
     } catch (err) {
       setError(err.message)
-      // Resume timer on error
-      startRef.current = Date.now() - elapsed * 1000
-      timerRef.current = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
-      }, 1000)
+      resumeTimer()
+      startHintTimer()
     } finally {
       setSubmitting(false)
     }
@@ -88,24 +122,24 @@ export default function Solve() {
   if (!problem) return <div className="error">{error || 'Problem not found'}</div>
 
   const diffColor = DIFF_COLORS[problem.difficulty] || 'var(--accent)'
-  const icon = problem.category_icon || '❓'
+  const icon      = problem.category_icon || '❓'
 
   return (
     <div className="solve-grid">
 
-      {/* ── Mobile tab bar (hidden on desktop) ──────────────── */}
+      {/* ── Mobile tab bar ──────────────────────────────────── */}
       <div className="solve-mobile-tabs">
         <button
           className={mobileTab === 'problem' ? 'active' : ''}
-          onClick={() => setMobileTab('problem')}
+          onClick={() => { setMobileTab('problem'); }}
         >
           📋 Problem
         </button>
         <button
-          className={mobileTab === 'guide' ? 'active' : ''}
-          onClick={() => setMobileTab('guide')}
+          className={`${mobileTab === 'guide' ? 'active' : ''}${guideHint ? ' guide-hint-tab' : ''}`}
+          onClick={openGuide}
         >
-          💡 Guide
+          {guideHint ? '💡 Stuck? Try Guide' : '💡 Guide'}
         </button>
       </div>
 
@@ -114,24 +148,18 @@ export default function Solve() {
         className={`solve-panel${mobileTab !== 'problem' ? ' solve-panel-hidden' : ''}`}
         style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'auto' }}
       >
-
         {/* Problem card */}
         <div className="card">
-          {/* Title row */}
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <span style={{ fontSize: '2rem', lineHeight: 1 }}>{icon}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <h2 style={{ margin: '0 0 0.5rem' }}>{problem.title}</h2>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span className="badge secondary">{problem.category_name}</span>
-                <span className="badge" style={{
-                  background: `${diffColor}18`, color: diffColor,
-                }}>
+                <span className="badge" style={{ background: `${diffColor}18`, color: diffColor }}>
                   {problem.difficulty}
                 </span>
-                {problem.is_daily && (
-                  <span className="badge gold">⭐ Daily +25 bonus</span>
-                )}
+                {problem.is_daily && <span className="badge gold">⭐ Daily +25 bonus</span>}
                 <span className="badge primary" style={{ marginLeft: 'auto' }}>
                   +{problem.token_reward} pts
                 </span>
@@ -139,7 +167,6 @@ export default function Solve() {
             </div>
           </div>
 
-          {/* Body */}
           <div style={{
             background: 'var(--bg-darker)', padding: '1.25rem',
             borderRadius: '8px', lineHeight: 1.8,
@@ -149,7 +176,6 @@ export default function Solve() {
             {problem.body}
           </div>
 
-          {/* Meta */}
           <div style={{
             display: 'flex', gap: '1.5rem', marginTop: '1rem',
             padding: '0.75rem 0', borderTop: '1px solid var(--border)',
@@ -171,7 +197,18 @@ export default function Solve() {
 
         {/* Submit card */}
         <div className="card">
-          <h3 style={{ marginTop: 0 }}>Your Solution</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0 }}>Your Solution</h3>
+            {/* Guide nudge — visible on desktop when hint active */}
+            {guideHint && (
+              <button
+                onClick={openGuide}
+                className="guide-hint-desktop-btn"
+              >
+                💡 Need a hint?
+              </button>
+            )}
+          </div>
 
           {error && <div className="error">{error}</div>}
 
@@ -215,10 +252,7 @@ export default function Solve() {
                   ? 'Peer-reviewed — any thoughtful answer earns points'
                   : 'Case-insensitive match'}
               </span>
-              <button
-                type="submit"
-                disabled={submitting || !solution.trim() || result?.is_correct}
-              >
+              <button type="submit" disabled={submitting || !solution.trim() || result?.is_correct}>
                 {submitting ? 'Submitting...' : 'Submit Solution'}
               </button>
             </div>
@@ -228,10 +262,10 @@ export default function Solve() {
 
       {/* ── AI Guide Panel ───────────────────────────────────── */}
       <div
-        className={`solve-panel${mobileTab !== 'guide' ? ' solve-panel-hidden' : ''}`}
+        className={`solve-panel${mobileTab !== 'guide' ? ' solve-panel-hidden' : ''}${guideHint ? ' guide-hint-panel' : ''}`}
         style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
       >
-        <GuideChat problemId={id} onFirstMessage={() => isMobile() && setMobileTab('guide')} />
+        <GuideChat problemId={id} onFirstMessage={clearHint} />
       </div>
 
     </div>
