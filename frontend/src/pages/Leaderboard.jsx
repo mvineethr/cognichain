@@ -96,9 +96,9 @@ export default function Leaderboard() {
               onClick={() => setActiveCat(cat.id)}
               style={{
                 padding: '0.4rem 1rem',
-                background: activeCat === cat.id ? 'rgba(0,204,106,0.15)' : 'var(--bg-darker)',
+                background: activeCat === cat.id ? 'rgba(110,231,168,0.15)' : 'var(--bg-darker)',
                 color: activeCat === cat.id ? 'var(--accent)' : 'var(--text-secondary)',
-                border: activeCat === cat.id ? '1px solid rgba(0,204,106,0.4)' : '1px solid var(--border)',
+                border: activeCat === cat.id ? '1px solid rgba(110,231,168,0.4)' : '1px solid var(--border)',
                 borderRadius: '20px', fontSize: '0.9rem',
                 transition: 'all 0.2s',
               }}
@@ -141,13 +141,13 @@ export default function Leaderboard() {
                   style={{
                     borderBottom: '1px solid var(--border)',
                     background: idx < 3
-                      ? `rgba(0,204,106,${0.06 - idx * 0.015})`
+                      ? `rgba(110,231,168,${0.06 - idx * 0.015})`
                       : idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-darker)',
                     transition: 'background 0.15s',
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,204,106,0.08)'}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(110,231,168,0.08)'}
                   onMouseLeave={e => e.currentTarget.style.background = idx < 3
-                    ? `rgba(0,204,106,${0.06 - idx * 0.015})`
+                    ? `rgba(110,231,168,${0.06 - idx * 0.015})`
                     : idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-darker)'}
                 >
                   <td style={{ padding: '1rem', fontWeight: 700, fontSize: '1.2rem' }}>
@@ -162,7 +162,7 @@ export default function Leaderboard() {
                         width: '38px', height: '38px', borderRadius: '50%',
                         background: 'var(--border)', display: 'flex',
                         alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        border: idx < 3 ? '2px solid rgba(0,204,106,0.5)' : 'none',
+                        border: idx < 3 ? '2px solid rgba(110,231,168,0.5)' : 'none',
                       }}>
                         {entry.avatar_url
                           ? <img src={entry.avatar_url} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />

@@ -4,11 +4,11 @@ import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 
 const rankTitles = {
-  'Novice': { emoji: '🥚', color: '#4d9cff' },
-  'Apprentice': { emoji: '🌱', color: '#00cc6a' },
-  'Adept': { emoji: '🔥', color: '#ffb84d' },
-  'Master': { emoji: '👑', color: '#ff6b6b' },
-  'Legend': { emoji: '⭐', color: '#ffd700' },
+  'Novice':     { emoji: '🥚', color: 'var(--diff-novice)'     },
+  'Apprentice': { emoji: '🌱', color: 'var(--diff-apprentice)' },
+  'Adept':      { emoji: '🔥', color: 'var(--diff-expert)'     },
+  'Master':     { emoji: '👑', color: 'var(--diff-master)'     },
+  'Legend':     { emoji: '⭐', color: 'var(--diff-legend)'     },
 }
 
 export default function Profile() {

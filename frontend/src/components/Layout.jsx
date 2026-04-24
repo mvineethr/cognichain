@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useMatch } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect, useState } from 'react'
 import PointsBadge from './PointsBadge'
@@ -19,7 +19,8 @@ export default function Layout() {
     navigate('/login')
   }
 
-  const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'me'
+  const username  = user?.user_metadata?.username || user?.email?.split('@')[0] || 'me'
+  const isSolving = useMatch('/solve/:id')
 
   return (
     <div className="app-shell">
@@ -101,7 +102,7 @@ export default function Layout() {
 
       {/* ── Main content ─────────────────────────────────────── */}
       <main className="main-area">
-        <div className="page-content">
+        <div className={`page-content${isSolving ? ' full-width' : ''}`}>
           <Outlet />
         </div>
       </main>

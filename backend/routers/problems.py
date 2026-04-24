@@ -82,18 +82,41 @@ def get_daily_problem():
     today      = date.today().isoformat()
     categories = _fetch_categories()
 
+    # Check if today's daily is already set
     res = (
         svc.table("problems")
         .select("*")
-        .eq("is_daily", "true")
+        .eq("is_daily", True)
         .eq("daily_date", today)
         .limit(1)
         .execute()
     )
-    if not res.data:
-        raise HTTPException(status_code=404, detail="No daily problem set for today")
+    if res.data:
+        return _attach_category(res.data[0], categories)
 
-    return _attach_category(res.data[0], categories)
+    # Auto-assign: clear old daily flag, pick a new random problem
+    svc.table("problems").update({"is_daily": False, "daily_date": None}).eq("is_daily", True).execute()
+
+    candidate = (
+        svc.table("problems")
+        .select("*")
+        .eq("is_active", True)
+        .neq("answer_type", "peer_review")
+        .is_("daily_date", "null")
+        .limit(1)
+        .execute()
+    )
+    if not candidate.data:
+        # Fallback: pick any active problem
+        candidate = svc.table("problems").select("*").eq("is_active", True).limit(1).execute()
+    if not candidate.data:
+        raise HTTPException(status_code=404, detail="No problems available")
+
+    chosen = candidate.data[0]
+    svc.table("problems").update({"is_daily": True, "daily_date": today}).eq("id", chosen["id"]).execute()
+    chosen["is_daily"]   = True
+    chosen["daily_date"] = today
+    return _attach_category(chosen, categories)
 
 # ── GET /problems ─────────────────────────────────────────────
 @router.get("", response_model=ProblemListOut)

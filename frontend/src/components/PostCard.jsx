@@ -3,18 +3,18 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 
 const TYPE_CONFIG = {
-  solve:       { color: '#00cc6a', icon: '✅', label: 'Solved' },
-  achievement: { color: '#ffd700', icon: '🏆', label: 'Achievement' },
-  status:      { color: '#4d9cff', icon: '💬', label: 'Post' },
-  help:        { color: '#ff9f43', icon: '🤔', label: 'Help' },
+  solve:       { color: 'var(--diff-apprentice)', icon: '✅', label: 'Solved' },
+  achievement: { color: 'var(--diff-legend)',      icon: '🏆', label: 'Achievement' },
+  status:      { color: 'var(--diff-novice)',      icon: '💬', label: 'Post' },
+  help:        { color: 'var(--diff-expert)',      icon: '🤔', label: 'Help' },
 }
 
 const RANK_COLORS = {
-  Novice:     '#4d9cff',
-  Apprentice: '#00cc6a',
-  Expert:     '#ffb84d',
-  Master:     '#ff6b6b',
-  Legend:     '#ffd700',
+  Novice:     'var(--diff-novice)',
+  Apprentice: 'var(--diff-apprentice)',
+  Adept:      'var(--diff-expert)',
+  Master:     'var(--diff-master)',
+  Legend:     'var(--diff-legend)',
 }
 
 function timeAgo(dateStr) {
