@@ -135,6 +135,26 @@ export default function PostCard({ post, currentUserId }) {
           {post.content}
         </p>
 
+        {/* Peer review answer — show reasoning for community feedback */}
+        {post.type === 'solve' && meta.is_peer_review && meta.answer_content && (
+          <div style={{
+            marginTop: '0.75rem',
+            padding: '0.85rem 1rem',
+            background: 'var(--bg-darker)',
+            border: '1px solid var(--border)',
+            borderLeft: '3px solid var(--diff-expert)',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.65,
+          }}>
+            <p style={{ margin: '0 0 0.4rem', fontSize: '0.75rem', color: 'var(--diff-expert)', fontWeight: 600 }}>
+              💭 Their reasoning
+            </p>
+            <p style={{ margin: 0 }}>{meta.answer_content}</p>
+          </div>
+        )}
+
         {/* Problem reference */}
         {post.problem_id && meta.problem_title && (
           <Link to={`/solve/${post.problem_id}`} style={{

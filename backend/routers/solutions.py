@@ -158,22 +158,35 @@ def submit_solution(payload: SolutionIn, user: dict = Depends(get_current_user))
 
         # Auto-post solve to social feed (non-critical)
         try:
-            solve_content = f'solved "{prob["title"]}" and earned {points} points!'
-            if prob["is_daily"]:
-                solve_content += " ⭐ Daily challenge bonus!"
-            if new_streak and new_streak > 1:
-                solve_content += f" 🔥 {new_streak}-day streak!"
+            is_peer_review = prob["answer_type"] == "peer_review"
+
+            if is_peer_review:
+                # Show the reasoning and invite discussion
+                solve_content = f'shared their reasoning on "{prob["title"]}" — what do you think?'
+                if new_streak and new_streak > 1:
+                    solve_content += f" 🔥 {new_streak}-day streak!"
+            else:
+                solve_content = f'solved "{prob["title"]}" and earned {points} points!'
+                if prob["is_daily"]:
+                    solve_content += " ⭐ Daily challenge bonus!"
+                if new_streak and new_streak > 1:
+                    solve_content += f" 🔥 {new_streak}-day streak!"
+
             svc.table("posts").insert({
                 "user_id":    user["id"],
                 "type":       "solve",
                 "content":    solve_content,
                 "problem_id": payload.problem_id,
                 "metadata": {
-                    "problem_title": prob["title"],
-                    "difficulty":    prob["difficulty"],
-                    "points":        points,
-                    "is_daily":      prob["is_daily"],
-                    "streak":        new_streak,
+                    "problem_title":   prob["title"],
+                    "difficulty":      prob["difficulty"],
+                    "points":          points,
+                    "is_daily":        prob["is_daily"],
+                    "streak":          new_streak,
+                    "is_peer_review":  is_peer_review,
+                    # Include answer for peer_review — used for community feedback
+                    # and as reasoning training data (problem → answer → comments)
+                    "answer_content":  payload.content if is_peer_review else None,
                 },
             }).execute()
             for badge_name in badges_earned:
