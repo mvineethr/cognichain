@@ -39,40 +39,82 @@ def list_categories():
 # ── GET /problems/daily-set ───────────────────────────────────
 @router.get("/daily-set")
 def get_daily_set():
-    """Returns today's daily + 2 spotlight problems for the Daily tab."""
-    client     = get_client()
+    """
+    Returns today's full daily set: 1 featured challenge + up to 3 brain gym problems.
+    All problems in the set are marked daily_date=today so they are excluded
+    from the regular Problems tab.
+    Auto-assigns the set if it hasn't been picked for today yet.
+    """
+    svc        = get_service_client()
     categories = _fetch_categories()
     today      = date.today().isoformat()
 
-    daily_res = (
-        client.table("problems")
+    # ── Already assigned today? Return cached set ──────────────
+    existing = (
+        svc.table("problems")
         .select("*")
-        .eq("is_daily", True)
         .eq("daily_date", today)
         .eq("is_active", True)
         .execute()
     )
-    daily = [_attach_category(p, categories) for p in (daily_res.data or [])]
-    used_cats = {p["category_id"] for p in daily}
+    if existing.data:
+        featured  = [_attach_category(p, categories) for p in existing.data if p.get("is_daily")]
+        spotlight = [_attach_category(p, categories) for p in existing.data if not p.get("is_daily")]
+        return {"daily": featured, "spotlight": spotlight, "date": today}
 
-    spotlight_res = (
-        client.table("problems")
+    # ── Auto-assign today's set ────────────────────────────────
+    # Clear is_daily flag from yesterday (keep daily_date for history)
+    svc.table("problems").update({"is_daily": False}).eq("is_daily", True).execute()
+
+    # Fetch all active problems not already used today
+    all_res = (
+        svc.table("problems")
         .select("*")
         .eq("is_active", True)
-        .order("token_reward", desc=True)
-        .limit(30)
         .execute()
     )
-    seen_cats = set(used_cats)
-    spotlight = []
-    for p in (spotlight_res.data or []):
-        if p.get("daily_date") == today:
-            continue
-        if p["category_id"] not in seen_cats and len(spotlight) < 2:
-            seen_cats.add(p["category_id"])
-            spotlight.append(_attach_category(p, categories))
+    pool = [p for p in (all_res.data or []) if p.get("daily_date") != today]
 
-    return {"daily": daily, "spotlight": spotlight, "date": today}
+    # Sort: never-used first (daily_date IS NULL), then oldest last-used date
+    pool.sort(key=lambda p: p.get("daily_date") or "0000-00-00")
+
+    if not pool:
+        raise HTTPException(status_code=404, detail="No problems available")
+
+    # Pick featured: must be auto-gradeable (not peer_review)
+    featured = next(
+        (p for p in pool if p.get("answer_type") != "peer_review"),
+        pool[0]  # fallback to any
+    )
+    used_ids  = {featured["id"]}
+    used_cats = {featured["category_id"]}
+
+    # Pick up to 3 brain gym problems from different categories
+    brain_gym = []
+    for p in pool:
+        if p["id"] in used_ids or p["category_id"] in used_cats:
+            continue
+        used_ids.add(p["id"])
+        used_cats.add(p["category_id"])
+        brain_gym.append(p)
+        if len(brain_gym) >= 3:
+            break
+
+    # Persist: mark featured as is_daily=True + daily_date=today
+    svc.table("problems").update({"is_daily": True, "daily_date": today}).eq("id", featured["id"]).execute()
+    featured["is_daily"]   = True
+    featured["daily_date"] = today
+
+    # Persist: mark brain gym with daily_date=today (excluded from Problems tab)
+    for p in brain_gym:
+        svc.table("problems").update({"daily_date": today}).eq("id", p["id"]).execute()
+        p["daily_date"] = today
+
+    return {
+        "daily":    [_attach_category(featured, categories)],
+        "spotlight": [_attach_category(p, categories) for p in brain_gym],
+        "date":     today,
+    }
 
 
 # ── GET /problems/daily ───────────────────────────────────────
@@ -94,18 +136,19 @@ def get_daily_problem():
     if res.data:
         return _attach_category(res.data[0], categories)
 
-    # Auto-assign: clear old daily flag, pick a new random problem
-    svc.table("problems").update({"is_daily": False, "daily_date": None}).eq("is_daily", True).execute()
+    # Auto-assign: clear old daily flag only (preserve daily_date for history)
+    svc.table("problems").update({"is_daily": False}).eq("is_daily", True).execute()
 
-    candidate = (
-        svc.table("problems")
-        .select("*")
-        .eq("is_active", True)
-        .neq("answer_type", "peer_review")
-        .is_("daily_date", "null")
-        .limit(1)
-        .execute()
-    )
+    # Prefer problems never used as daily (daily_date IS NULL), then oldest used
+    all_res = svc.table("problems").select("*").eq("is_active", True).neq("answer_type", "peer_review").execute()
+    pool = [p for p in (all_res.data or []) if p.get("daily_date") != today]
+    pool.sort(key=lambda p: p.get("daily_date") or "0000-00-00")
+
+    candidate_data = pool[:1]
+    class _Wrap:
+        def __init__(self, data): self.data = data
+    candidate = _Wrap(candidate_data)
+
     if not candidate.data:
         # Fallback: pick any active problem
         candidate = svc.table("problems").select("*").eq("is_active", True).limit(1).execute()
