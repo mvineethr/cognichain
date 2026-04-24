@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PointsBadge from './PointsBadge'
 
 const NAV_LINKS = [
@@ -13,7 +13,6 @@ const NAV_LINKS = [
 export default function Layout() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleSignOut = async () => {
     await signOut()
@@ -23,78 +22,126 @@ export default function Layout() {
   const username = user?.user_metadata?.username || user?.email?.split('@')[0] || 'me'
 
   return (
-    <div>
-      <nav style={{
-        background: 'var(--bg-card)',
-        borderBottom: '1px solid var(--border)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <div style={{
-          maxWidth: '1200px', margin: '0 auto', padding: '0 1rem',
-          display: 'flex', alignItems: 'center', gap: '1rem', height: '60px',
-        }}>
-          {/* Logo */}
-          <NavLink to="/" style={{ textDecoration: 'none', flexShrink: 0 }}>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--accent)', letterSpacing: '-0.02em' }}>
-              ⚡ CogniChain
-            </span>
-          </NavLink>
+    <div className="app-shell">
 
-          {/* Nav Links */}
-          <div style={{ display: 'flex', gap: '0.25rem', flex: 1, justifyContent: 'center' }}>
-            {NAV_LINKS.map(link => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === '/'}
-                style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: '0.4rem',
-                  padding: '0.4rem 0.9rem', borderRadius: '8px',
-                  textDecoration: 'none', fontSize: '0.9rem', fontWeight: 600,
-                  transition: 'all 0.15s',
-                  background: isActive ? 'rgba(0,204,106,0.15)' : 'transparent',
-                  color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                })}
-              >
-                <span style={{ fontSize: '1rem' }}>{link.icon}</span>
-                <span className="nav-label">{link.label}</span>
-              </NavLink>
-            ))}
+      {/* ── Sidebar ──────────────────────────────────────────── */}
+      <aside className="sidebar">
+
+        {/* Logo */}
+        <NavLink to="/" className="sidebar-logo">
+          ⚡ CogniChain
+        </NavLink>
+
+        {/* Nav links */}
+        {NAV_LINKS.map(link => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            end={link.to === '/'}
+            className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+          >
+            <span className="nav-icon">{link.icon}</span>
+            <span>{link.label}</span>
+          </NavLink>
+        ))}
+
+        <div className="nav-divider" />
+
+        <NavLink
+          to="/profile"
+          className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+        >
+          <span className="nav-icon">👤</span>
+          <span>Profile</span>
+        </NavLink>
+
+        {/* Bottom section — points + user card */}
+        <div className="sidebar-bottom">
+
+          {/* Points + streak line */}
+          <div className="sidebar-points">
+            <div className="dot" />
+            <PointsBadge compact />
           </div>
 
-          {/* Right side */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            <PointsBadge />
-            <NavLink
-              to="/profile"
-              style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: '0.4rem',
-                padding: '0.35rem 0.75rem', borderRadius: '8px',
-                textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600,
-                background: isActive ? 'rgba(0,204,106,0.15)' : 'var(--bg-darker)',
-                color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-                border: '1px solid var(--border)',
-                transition: 'all 0.15s',
-              })}
-            >
-              👤 {username}
-            </NavLink>
+          {/* User card */}
+          <div className="user-card">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+              <div className="user-card-avatar">
+                {user?.user_metadata?.avatar_url
+                  ? <img src={user.user_metadata.avatar_url} alt={username} />
+                  : '👤'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{
+                  fontWeight: 700, fontSize: '0.87rem',
+                  color: 'var(--text-primary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  @{username}
+                </div>
+                <RankBadge userId={user?.id} />
+              </div>
+            </div>
             <button
               onClick={handleSignOut}
               className="secondary"
-              style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}
+              style={{
+                width: '100%', padding: '7px', fontSize: '0.78rem',
+                borderColor: 'var(--border)', color: 'var(--text-muted)',
+                borderRadius: 8,
+              }}
             >
-              Out
+              Sign out
             </button>
           </div>
-        </div>
-      </nav>
 
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
-        <Outlet />
+        </div>
+      </aside>
+
+      {/* ── Main content ─────────────────────────────────────── */}
+      <main className="main-area">
+        <div className="page-content">
+          <Outlet />
+        </div>
       </main>
+
     </div>
+  )
+}
+
+/**
+ * Small rank badge — reads from profile context or renders nothing.
+ * Replace with your actual profile hook if you have one.
+ */
+function RankBadge({ userId }) {
+  const [rank, setRank] = useState(null)
+
+  useEffect(() => {
+    // Pulls rank from localStorage cache set by PointsBadge/Profile pages
+    const cached = localStorage.getItem('cognichain_rank')
+    if (cached) setRank(cached)
+  }, [userId])
+
+  if (!rank) return null
+
+  const RANK_COLORS = {
+    Novice:     '#a8c8ff',
+    Apprentice: '#6ee7a8',
+    Adept:      '#ffd6a5',
+    Master:     '#ffadad',
+    Legend:     '#ffd66e',
+  }
+  const color = RANK_COLORS[rank] || '#9aabbf'
+
+  return (
+    <span style={{
+      fontSize: '0.68rem', fontWeight: 600,
+      padding: '1px 7px', borderRadius: 10,
+      background: `${color}18`, color,
+      display: 'inline-block', marginTop: 2,
+    }}>
+      🌱 {rank}
+    </span>
   )
 }

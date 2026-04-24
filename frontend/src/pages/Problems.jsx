@@ -4,10 +4,10 @@ import { api } from '../lib/api'
 
 const DIFFICULTY_ORDER = ['novice', 'apprentice', 'expert', 'master']
 const DIFFICULTY_META = {
-  novice:     { label: 'Novice',     color: '#4d9cff', bg: 'rgba(77,156,255,0.1)',  desc: 'Entry level — build your foundation', pts: 10 },
-  apprentice: { label: 'Apprentice', color: '#00cc6a', bg: 'rgba(0,204,106,0.1)',   desc: 'Intermediate — sharpen your skills',  pts: 20 },
-  expert:     { label: 'Expert',     color: '#ffb84d', bg: 'rgba(255,184,77,0.1)',  desc: 'Advanced — serious challenge',         pts: 40 },
-  master:     { label: 'Master',     color: '#ff6b6b', bg: 'rgba(255,107,107,0.1)', desc: 'Elite — prove your mastery',          pts: 80 },
+  novice:     { label: 'Novice',     color: 'var(--diff-novice)',     bg: 'rgba(168,200,255,0.1)',  desc: 'Entry level — build your foundation', pts: 10 },
+  apprentice: { label: 'Apprentice', color: 'var(--diff-apprentice)', bg: 'rgba(110,231,168,0.1)',  desc: 'Intermediate — sharpen your skills',  pts: 20 },
+  expert:     { label: 'Expert',     color: 'var(--diff-expert)',     bg: 'rgba(255,214,165,0.1)',  desc: 'Advanced — serious challenge',         pts: 40 },
+  master:     { label: 'Master',     color: 'var(--diff-master)',     bg: 'rgba(255,173,173,0.1)',  desc: 'Elite — prove your mastery',           pts: 80 },
 }
 
 const CATEGORY_STYLES = {
