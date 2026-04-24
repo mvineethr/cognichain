@@ -10,6 +10,8 @@ import Solve       from './pages/Solve'
 import Profile     from './pages/Profile'
 import Leaderboard from './pages/Leaderboard'
 import Login       from './pages/Login'
+import ToS         from './pages/ToS'
+import Privacy     from './pages/Privacy'
 import Layout      from './components/Layout'
 
 import './index.css'
@@ -25,7 +27,12 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          {/* Public routes — no auth required */}
+          <Route path="/login"   element={<Login />} />
+          <Route path="/tos"     element={<ToS />} />
+          <Route path="/privacy" element={<Privacy />} />
+
+          {/* Protected routes */}
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
             <Route index                    element={<Feed />} />
             <Route path="daily"             element={<Daily />} />

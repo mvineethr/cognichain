@@ -1,26 +1,23 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
-  const [tab, setTab] = useState('signin')
-  const [email, setEmail] = useState('')
+  const [tab, setTab]           = useState('signin')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [agreed, setAgreed]     = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
   const navigate = useNavigate()
 
   const handleSignIn = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-
     try {
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password })
       if (err) throw err
       navigate('/')
     } catch (err) {
@@ -33,24 +30,21 @@ export default function Login() {
   const handleSignUp = async (e) => {
     e.preventDefault()
     setError('')
-    if (!username.trim()) {
-      setError('Username is required')
-      return
-    }
+    if (!username.trim()) { setError('Username is required'); return }
+    if (!agreed) { setError('You must agree to the Terms of Service and Privacy Policy'); return }
 
     setLoading(true)
     try {
-      // Create auth user
-      const { data, error: authErr } = await supabase.auth.signUp({
+      const { error: authErr } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { username } },
       })
       if (authErr) throw authErr
-
       setEmail('')
       setPassword('')
       setUsername('')
+      setAgreed(false)
       setError('')
       setTab('signin')
       setError('✓ Account created! Sign in to continue.')
@@ -77,10 +71,11 @@ export default function Login() {
         </div>
 
         <div className="card">
+          {/* Tab switcher */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
             <button
               type="button"
-              onClick={() => { setTab('signin'); setError(''); }}
+              onClick={() => { setTab('signin'); setError('') }}
               style={{
                 flex: 1,
                 background: tab === 'signin' ? 'var(--accent)' : 'var(--bg-darker)',
@@ -92,7 +87,7 @@ export default function Login() {
             </button>
             <button
               type="button"
-              onClick={() => { setTab('signup'); setError(''); }}
+              onClick={() => { setTab('signup'); setError('') }}
               style={{
                 flex: 1,
                 background: tab === 'signup' ? 'var(--accent)' : 'var(--bg-darker)',
@@ -104,14 +99,19 @@ export default function Login() {
             </button>
           </div>
 
+          {/* ── Sign In ── */}
           {tab === 'signin' ? (
             <form onSubmit={handleSignIn} className="flex-col">
-              {error && <div className="error">{error}</div>}
+              {error && (
+                <div className={error.includes('✓') ? 'success' : 'error'} style={{ fontSize: '0.9rem', padding: '0.75rem' }}>
+                  {error}
+                </div>
+              )}
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -119,7 +119,7 @@ export default function Login() {
                 type="password"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -127,16 +127,20 @@ export default function Login() {
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
+
           ) : (
+            /* ── Sign Up ── */
             <form onSubmit={handleSignUp} className="flex-col">
-              {error && <div className={error.includes('✓') ? 'success' : 'error'} style={{ fontSize: '0.9rem', padding: '0.75rem' }}>
-                {error}
-              </div>}
+              {error && (
+                <div className={error.includes('✓') ? 'success' : 'error'} style={{ fontSize: '0.9rem', padding: '0.75rem' }}>
+                  {error}
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Username"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={e => setUsername(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -144,7 +148,7 @@ export default function Login() {
                 type="email"
                 placeholder="Email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 disabled={loading}
               />
@@ -152,18 +156,71 @@ export default function Login() {
                 type="password"
                 placeholder="Password (min 6 chars)"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 minLength={6}
                 disabled={loading}
               />
-              <button type="submit" disabled={loading} style={{ width: '100%' }}>
+
+              {/* Agreement checkbox */}
+              <label style={{
+                display: 'flex', alignItems: 'flex-start', gap: '0.65rem',
+                cursor: 'pointer', padding: '0.75rem',
+                background: agreed ? 'rgba(110,231,168,0.06)' : 'var(--bg-darker)',
+                border: `1px solid ${agreed ? 'rgba(110,231,168,0.3)' : 'var(--border)'}`,
+                borderRadius: '8px', transition: 'all 0.2s',
+                fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5,
+              }}>
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={e => setAgreed(e.target.checked)}
+                  disabled={loading}
+                  style={{
+                    width: '16px', height: '16px', marginTop: '2px',
+                    accentColor: 'var(--accent)', flexShrink: 0,
+                  }}
+                />
+                <span>
+                  I agree to the{' '}
+                  <Link
+                    to="/tos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    Terms of Service
+                  </Link>
+                  {' '}and{' '}
+                  <Link
+                    to="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: 'var(--accent)', textDecoration: 'underline' }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    Privacy Policy
+                  </Link>
+                  , including the use of my anonymized session data to train AI models.
+                </span>
+              </label>
+
+              <button type="submit" disabled={loading || !agreed} style={{ width: '100%' }}>
                 {loading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}
         </div>
 
+        {/* Footer links */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: '1.5rem',
+          marginTop: '1.5rem', fontSize: '0.8rem',
+        }}>
+          <Link to="/tos" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Terms of Service</Link>
+          <Link to="/privacy" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Privacy Policy</Link>
+        </div>
       </div>
     </div>
   )

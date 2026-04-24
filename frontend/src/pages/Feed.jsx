@@ -2,23 +2,29 @@ import { useState, useEffect, useRef } from 'react'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import PostCard from '../components/PostCard'
+import AdBanner from '../components/AdBanner'
 
 const POST_TYPES = [
   { value: 'status', icon: '💬', label: 'Share something' },
   { value: 'help',   icon: '🤔', label: 'Ask for help' },
 ]
 
+// Insert an ad every N posts
+const AD_EVERY = 5
+// Replace these slot IDs with your real AdSense ad unit slot IDs
+const AD_SLOTS = ['1234567890', '0987654321']
+
 export default function Feed() {
   const { user } = useAuth()
-  const [posts, setPosts]           = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [hasMore, setHasMore]       = useState(true)
-  const [error, setError]           = useState('')
-  const [postType, setPostType]     = useState('status')
-  const [content, setContent]       = useState('')
-  const [posting, setPosting]       = useState(false)
-  const [postError, setPostError]   = useState('')
+  const [posts, setPosts]               = useState([])
+  const [loading, setLoading]           = useState(true)
+  const [loadingMore, setLoadingMore]   = useState(false)
+  const [hasMore, setHasMore]           = useState(true)
+  const [error, setError]               = useState('')
+  const [postType, setPostType]         = useState('status')
+  const [content, setContent]           = useState('')
+  const [posting, setPosting]           = useState(false)
+  const [postError, setPostError]       = useState('')
   const offset = useRef(0)
   const LIMIT = 20
 
@@ -64,6 +70,17 @@ export default function Feed() {
     }
   }
 
+  // Build feed items with ads interspersed
+  const feedItems = []
+  posts.forEach((post, idx) => {
+    feedItems.push({ type: 'post', data: post, key: `post-${post.id}` })
+    // Insert an ad after every AD_EVERY posts (but not after the last one)
+    if ((idx + 1) % AD_EVERY === 0 && idx < posts.length - 1) {
+      const slotIdx = Math.floor((idx + 1) / AD_EVERY - 1) % AD_SLOTS.length
+      feedItems.push({ type: 'ad', slot: AD_SLOTS[slotIdx], key: `ad-${idx}` })
+    }
+  })
+
   return (
     <div style={{ maxWidth: '680px', margin: '0 auto' }}>
       {error && <div className="error">{error}</div>}
@@ -75,7 +92,7 @@ export default function Feed() {
         borderRadius: '12px',
         padding: '1.25rem',
         marginBottom: '1.5rem',
-        boxShadow: '0 2px 20px rgba(0,204,106,0.05)',
+        boxShadow: '0 2px 20px rgba(110,231,168,0.05)',
       }}>
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           {POST_TYPES.map(t => (
@@ -104,8 +121,8 @@ export default function Feed() {
             onChange={e => setContent(e.target.value)}
             placeholder={
               postType === 'help'
-                ? "What problem are you stuck on? Describe your thinking so far..."
-                : "Share a win, insight, or something on your mind..."
+                ? 'What problem are you stuck on? Describe your thinking so far...'
+                : 'Share a win, insight, or something on your mind...'
             }
             disabled={posting}
             rows={3}
@@ -138,13 +155,21 @@ export default function Feed() {
         </div>
       ) : (
         <div className="flex-col" style={{ gap: '1rem' }}>
-          {posts.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUserId={user?.id}
-            />
-          ))}
+          {feedItems.map(item =>
+            item.type === 'post' ? (
+              <PostCard
+                key={item.key}
+                post={item.data}
+                currentUserId={user?.id}
+              />
+            ) : (
+              <AdBanner
+                key={item.key}
+                slot={item.slot}
+                style={{ minHeight: '90px', borderRadius: '8px' }}
+              />
+            )
+          )}
 
           {hasMore && (
             <button
