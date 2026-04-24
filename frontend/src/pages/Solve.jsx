@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import GuideChat from '../components/GuideChat'
 
+// Switch to guide tab automatically when AI guide is opened on mobile
+const isMobile = () => window.innerWidth <= 768
+
 const DIFF_COLORS = {
   novice:     'var(--diff-novice)',
   apprentice: 'var(--diff-apprentice)',
@@ -19,17 +22,21 @@ function formatTime(secs) {
 export default function Solve() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [problem, setProblem]     = useState(null)
-  const [solution, setSolution]   = useState('')
-  const [loading, setLoading]     = useState(true)
+  const [problem, setProblem]       = useState(null)
+  const [solution, setSolution]     = useState('')
+  const [loading, setLoading]       = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError]         = useState('')
-  const [result, setResult]       = useState(null)
-  const [elapsed, setElapsed]     = useState(0)
+  const [error, setError]           = useState('')
+  const [result, setResult]         = useState(null)
+  const [elapsed, setElapsed]       = useState(0)
+  const [mobileTab, setMobileTab]   = useState('problem')
   const startRef = useRef(Date.now())
   const timerRef = useRef(null)
 
   useEffect(() => {
+    // Scroll to top on load (fixes mobile auto-scroll to bottom)
+    window.scrollTo(0, 0)
+
     api.getProblem(id)
       .then(setProblem)
       .catch(err => setError(err.message))
@@ -86,8 +93,27 @@ export default function Solve() {
   return (
     <div className="solve-grid">
 
+      {/* ── Mobile tab bar (hidden on desktop) ──────────────── */}
+      <div className="solve-mobile-tabs">
+        <button
+          className={mobileTab === 'problem' ? 'active' : ''}
+          onClick={() => setMobileTab('problem')}
+        >
+          📋 Problem
+        </button>
+        <button
+          className={mobileTab === 'guide' ? 'active' : ''}
+          onClick={() => setMobileTab('guide')}
+        >
+          💡 Guide
+        </button>
+      </div>
+
       {/* ── Problem Panel ───────────────────────────────────── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'auto' }}>
+      <div
+        className={`solve-panel${mobileTab !== 'problem' ? ' solve-panel-hidden' : ''}`}
+        style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'auto' }}
+      >
 
         {/* Problem card */}
         <div className="card">
@@ -201,8 +227,11 @@ export default function Solve() {
       </div>
 
       {/* ── AI Guide Panel ───────────────────────────────────── */}
-      <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        <GuideChat problemId={id} />
+      <div
+        className={`solve-panel${mobileTab !== 'guide' ? ' solve-panel-hidden' : ''}`}
+        style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      >
+        <GuideChat problemId={id} onFirstMessage={() => isMobile() && setMobileTab('guide')} />
       </div>
 
     </div>

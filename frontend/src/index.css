@@ -507,8 +507,59 @@ button.danger:hover { filter: brightness(1.1); }
   .page-content { padding: 28px 24px 48px; }
 }
 
+/* ── Solve mobile tabs (hidden on desktop) ────────────────────── */
+.solve-mobile-tabs { display: none; }
+.solve-panel-hidden { display: none !important; }
+
 @media (max-width: 768px) {
-  .solve-grid { grid-template-columns: 1fr; height: auto; }
+  /* Solve page becomes full-height tab layout */
+  .solve-grid {
+    grid-template-columns: 1fr;
+    height: calc(100dvh - 56px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Tab bar */
+  .solve-mobile-tabs {
+    display: flex;
+    flex-shrink: 0;
+    background: var(--bg-darker);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .solve-mobile-tabs button {
+    flex: 1;
+    padding: 0.75rem;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .solve-mobile-tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(110,231,168,0.05);
+  }
+
+  /* Each panel scrolls independently */
+  .solve-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Full-width page on solve */
+  .page-content.full-width { padding: 0 !important; }
+
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .page-content { padding: 20px 16px 40px; }
 }
