@@ -117,7 +117,7 @@ export default function Solve() {
       setResult(res)
       setSolution('')
       if (res.is_correct) {
-        setTimeout(() => navigate('/'), 2500)
+        setTimeout(() => navigate(-1), 2500)
       } else {
         // Wrong — show popup, resume timer, restart hint countdown
         showWrongAnswer(res.message)

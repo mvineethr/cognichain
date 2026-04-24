@@ -12,8 +12,8 @@ to fine-tune an open-source reasoning model (ethically, with ToS disclosure).
 
 ## Monetization Plan
 - Free tier: ads + basic AI guide
-- Pro tier ($5-8/mo): no ads + enhanced AI guide (more hints, deeper explanations)
-- Background: collect reasoning data (ai_sessions + solutions tables) for model training
+- Pro tier ($5-8/mo): no ads + enhanced AI guide — hold until 500-1000 users
+- Background: collect reasoning data (ai_sessions + solutions + posts/comments) for model training
 - Goal: traction + dataset → seed investors/collaborators
 
 ## Stack
@@ -31,23 +31,28 @@ to fine-tune an open-source reasoning model (ethically, with ToS disclosure).
 - CSS vars for difficulty: --diff-novice/apprentice/expert/master/legend
 
 ## Key Files
-- backend/main.py              — FastAPI app, CORS uses FRONTEND_URL env var
-- backend/routers/problems.py  — daily auto-assign on /problems/daily
-- backend/routers/feed.py      — explicit profile lookup (no PostgREST join)
-- backend/routers/solutions.py — auto-posts to feed on correct solve
-- backend/categories_seed.sql  — 48 problems across 6 categories (RUN IN SUPABASE)
-- frontend/src/index.css       — full design system tokens
-- frontend/src/components/Layout.jsx    — sidebar nav, full-width for /solve/:id
+- backend/main.py                — FastAPI app, CORS uses FRONTEND_URL env var
+- backend/routers/problems.py   — daily auto-assign on /problems/daily-set (4 problems)
+- backend/routers/feed.py       — explicit profile lookup (no PostgREST join)
+- backend/routers/solutions.py  — auto-posts to feed; peer_review posts include answer_content
+- backend/routers/guide.py      — Claude AI guide, saves to ai_sessions table
+- backend/categories_seed.sql   — 48 problems across 6 categories (already run in Supabase)
+- backend/schema.sql            — full DB schema + trigger + RLS (already run in Supabase)
+- frontend/src/index.css        — full design system tokens + mobile solve layout
+- frontend/src/components/Layout.jsx     — sidebar nav, full-width for /solve/:id
 - frontend/src/components/PointsBadge.jsx
-- frontend/src/components/PostCard.jsx  — TYPE_CONFIG uses CSS vars
+- frontend/src/components/PostCard.jsx   — shows peer_review reasoning block in feed
 - frontend/src/components/GuideChat.jsx
-- frontend/src/pages/Feed.jsx
-- frontend/src/pages/Daily.jsx
-- frontend/src/pages/Problems.jsx — category card grid → drill-down by difficulty
-- frontend/src/pages/Solve.jsx   — timer, full-width, result display
+- frontend/src/components/AdBanner.jsx   — Google AdSense (publisher ID configured)
+- frontend/src/pages/Feed.jsx            — ad slots every 5 posts
+- frontend/src/pages/Daily.jsx           — 1 featured + 3 brain gym, daily refresh
+- frontend/src/pages/Problems.jsx        — category card grid → drill-down by difficulty
+- frontend/src/pages/Solve.jsx           — timer, mobile tabs, guide hint, wrong answer popup
 - frontend/src/pages/Profile.jsx
 - frontend/src/pages/Leaderboard.jsx
-- frontend/src/lib/api.js        — all API calls centralized
+- frontend/src/pages/ToS.jsx             — Terms of Service (public route)
+- frontend/src/pages/Privacy.jsx         — Privacy Policy (public route)
+- frontend/src/lib/api.js                — all API calls centralized
 
 ## Environment Variables
 ### Railway (backend)
@@ -59,41 +64,91 @@ to fine-tune an open-source reasoning model (ethically, with ToS disclosure).
 - VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 - VITE_API_URL=https://cognichain-production.up.railway.app
 
+## AdSense Config
+- Publisher ID: ca-pub-1056648710785121
+- Ad unit slot:  8932186038
+- Configured in: frontend/index.html + AdBanner.jsx + Feed.jsx
+- Status: waiting on Google approval (site needs traffic first)
+
 ## What's Working
 - Auth (Supabase email/password, profile auto-created via trigger)
-- Problems feed with category cards + difficulty drill-down
-- Daily problem auto-assigns itself if none set for today
-- Solve page: timer, AI guide chat, submit + points award
-- Social feed: posts, likes, comments (feed 500 fixed)
+- Signup agreement checkbox (ToS + Privacy Policy, mandatory)
+- ToS (/tos) and Privacy Policy (/privacy) — public routes, no auth required
+- Problems tab: category card grid + difficulty drill-down (48 problems)
+- Daily tab: auto-assigns 1 featured challenge + 3 brain gym problems daily
+  - All 4 marked daily_date=today → excluded from Problems tab
+  - Rotates by oldest-used-first across all 48 problems
+- Solve page:
+  - Live timer (pauses on submit, resumes on wrong answer)
+  - Mobile tab layout: Problem tab / Guide tab (no more long scroll)
+  - Guide hint: after 90s of no submission, Guide tab pulses + "Stuck? Try Guide"
+  - Wrong answer popup: slides in from top, auto-dismisses after 3.5s
+  - On correct: navigate(-1) — goes back to wherever user came from
+- AI Guide: Socratic method, saves full chat history to ai_sessions table
+- Social feed: posts, likes, comments; peer_review answers shown with reasoning block
 - Leaderboard: daily/weekly/alltime/by-category
 - Profile: points, streak, rank, badges, recent solutions
+- AdSense: infrastructure wired up (ad every 5 posts in feed)
 - Railway deploy (Docker, sh -c PORT expansion)
 - Vercel deploy (SPA rewrites in vercel.json)
 
+## Reasoning Data — Already Being Collected
+Three data sources are live and collecting:
+1. `ai_sessions` table — full guide chat history per user per problem
+2. `solutions` table — answer content, correctness, time_taken_secs
+3. `posts` + comments — peer_review answers in metadata.answer_content,
+   community comments = quality feedback on reasoning
+
+Training triplet: problem → user_answer (ai_sessions/solutions) → feedback (comments)
+Export pipeline (Supabase → JSONL) not built yet — do this once real users arrive.
+
 ## Known Issues / Pending
-- categories_seed.sql must be run in Supabase if not done yet (48 problems)
-- No ToS / Privacy Policy pages yet (needed before real users)
-- No ad integration yet
-- No paywall / Pro tier yet
-- Feed auto-posts need end-to-end testing (solve → post appears in feed)
-- Daily tab (/daily) needs testing with real daily-set data
-- Reasoning data pipeline not built yet (future phase)
+- AdSense: needs Google approval + real traffic before ads show
+- No paywall / Pro tier yet (intentional — wait for 500-1000 users)
+- Reasoning data export pipeline not built yet (Supabase → JSONL)
+- Rename to Nautz at launch (check nautz.ai and nautz.app domains)
+- Supabase fix needed if signup fails: run this SQL in Supabase SQL editor:
+  ```sql
+  -- Recreate trigger (if signup gives "Database error saving new user")
+  create or replace function public.handle_new_user()
+  returns trigger as $$
+  begin
+    insert into public.profiles (id, username)
+    values (new.id, coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)))
+    on conflict (id) do nothing;
+    return new;
+  end;
+  $$ language plpgsql security definer;
+  drop trigger if exists on_auth_user_created on auth.users;
+  create trigger on_auth_user_created
+    after insert on auth.users
+    for each row execute procedure public.handle_new_user();
+
+  -- Drop unique constraint on daily_date (multiple problems share same date now)
+  alter table public.problems drop constraint if exists problems_daily_date_key;
+  create index if not exists idx_problems_daily_date on public.problems(daily_date);
+  ```
 
 ## Next Steps (in order)
-1. Test full solve flow end-to-end (solve problem → points awarded → post in feed)
-2. Test Daily tab
-3. Build ToS + Privacy Policy pages
-4. Add Google AdSense integration (free tier)
-5. Design + build Pro tier paywall (Stripe)
-6. Start reasoning data export pipeline (Supabase → JSONL)
-7. Rename everything to Nautz closer to launch
+1. ✅ Test full solve flow end-to-end
+2. ✅ Test Daily tab
+3. ✅ ToS + Privacy Policy + signup agreement
+4. ✅ Google AdSense integration
+5. ✅ Mobile solve page (tab layout)
+6. ✅ Guide hint nudge (90s)
+7. ✅ Wrong answer popup
+8. ✅ Peer review answers in feed (with reasoning block)
+9. → Reddit/Discord/friends soft launch (in progress)
+10. Build reasoning data export pipeline (Supabase → JSONL)
+11. Domain purchase + rename to Nautz (at launch)
+12. Pro tier paywall (Stripe) — after 500-1000 users
 
 ## Reasoning Model Vision
-- Collect: ai_sessions (chat history) + solutions (answers, correctness, time)
-- Format: problem → chain-of-thought → answer (JSONL)
+- Collect: ai_sessions (chat history) + solutions (answers, time) + peer_review comments
+- Format: problem → chain-of-thought → answer → community feedback (JSONL)
 - Augment: Claude generates ideal COT traces for all 48 problems (~$5)
 - Fine-tune: Llama/Mistral/Qwen on collected data (~$50-200 on Together AI)
-- Legal: needs ToS disclosure before collecting data for training
+- Legal: ToS disclosure done ✅ — users consent on signup
 - Business: users earn tokens for contributing quality data (Phase 3)
 
 ## Branding
