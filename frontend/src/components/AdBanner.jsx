@@ -11,7 +11,7 @@ import { useEffect, useRef } from 'react'
  * 5. Update the script src in index.html with your publisher ID too
  */
 
-const PUBLISHER_ID = 'ca-pub-XXXXXXXXXXXXXXXX' // ← Replace with your AdSense publisher ID
+const PUBLISHER_ID = 'ca-pub-1056648710785121' // ← Replace with your AdSense publisher ID
 
 export default function AdBanner({ slot, format = 'auto', style: extraStyle = {} }) {
   const insRef = useRef(null)

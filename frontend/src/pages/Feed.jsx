@@ -12,7 +12,7 @@ const POST_TYPES = [
 // Insert an ad every N posts
 const AD_EVERY = 5
 // Replace these slot IDs with your real AdSense ad unit slot IDs
-const AD_SLOTS = ['1234567890', '0987654321']
+const AD_SLOTS = ['1056648710785121']
 
 export default function Feed() {
   const { user } = useAuth()
