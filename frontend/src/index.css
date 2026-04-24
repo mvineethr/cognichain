@@ -482,6 +482,39 @@ button.danger:hover { filter: brightness(1.1); }
 ::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #2a3a4e; }
 
+/* ── Wrong answer popup ───────────────────────────────────────── */
+@keyframes popupSlideIn {
+  from { transform: translateX(-50%) translateY(-120%); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+@keyframes popupSlideOut {
+  from { transform: translateX(-50%) translateY(0);     opacity: 1; }
+  to   { transform: translateX(-50%) translateY(-120%); opacity: 0; }
+}
+
+.wrong-popup {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: min(480px, calc(100vw - 2rem));
+  animation: popupSlideIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  cursor: pointer;
+}
+.wrong-popup-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #1e1a2e;
+  border: 1px solid rgba(255,107,107,0.4);
+  border-left: 4px solid #ff6b6b;
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,107,107,0.1);
+  color: var(--text-primary);
+}
+
 /* ── Guide hint animations ────────────────────────────────────── */
 @keyframes guideHintGlow {
   0%, 100% {

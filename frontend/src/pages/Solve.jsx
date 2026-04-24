@@ -32,11 +32,13 @@ export default function Solve() {
   const [result, setResult]         = useState(null)
   const [elapsed, setElapsed]       = useState(0)
   const [mobileTab, setMobileTab]   = useState('problem')
-  const [guideHint, setGuideHint]   = useState(false)   // ← hint state
+  const [guideHint, setGuideHint]   = useState(false)
+  const [wrongPopup, setWrongPopup] = useState(null)   // { message } | null
 
   const startRef    = useRef(Date.now())
   const timerRef    = useRef(null)
-  const hintRef     = useRef(null)    // setTimeout for guide hint
+  const hintRef     = useRef(null)
+  const popupRef    = useRef(null)   // setTimeout for auto-dismiss
 
   // ── Start / clear the guide hint timer ────────────────────────
   const startHintTimer = useCallback(() => {
@@ -78,6 +80,18 @@ export default function Solve() {
     setMobileTab('guide')
   }, [clearHint])
 
+  // ── Wrong answer popup ────────────────────────────────────────
+  const showWrongAnswer = useCallback((message) => {
+    clearTimeout(popupRef.current)
+    setWrongPopup({ message })
+    popupRef.current = setTimeout(() => setWrongPopup(null), 3500)
+  }, [])
+
+  const dismissPopup = useCallback(() => {
+    clearTimeout(popupRef.current)
+    setWrongPopup(null)
+  }, [])
+
   // ── Resume elapsed timer ───────────────────────────────────────
   const resumeTimer = useCallback(() => {
     startRef.current = Date.now() - elapsed * 1000
@@ -105,7 +119,8 @@ export default function Solve() {
       if (res.is_correct) {
         setTimeout(() => navigate('/'), 2500)
       } else {
-        // Wrong — resume timer and restart hint countdown
+        // Wrong — show popup, resume timer, restart hint countdown
+        showWrongAnswer(res.message)
         resumeTimer()
         startHintTimer()
       }
@@ -125,6 +140,28 @@ export default function Solve() {
   const icon      = problem.category_icon || '❓'
 
   return (
+    <>
+    {/* ── Wrong answer popup ───────────────────────────────── */}
+    {wrongPopup && (
+      <div className="wrong-popup" onClick={dismissPopup}>
+        <div className="wrong-popup-inner">
+          <span style={{ fontSize: '1.4rem' }}>🤔</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ display: 'block', marginBottom: '0.2rem' }}>Not quite yet</strong>
+            <span style={{ fontSize: '0.88rem', opacity: 0.85 }}>{wrongPopup.message}</span>
+          </div>
+          <button
+            onClick={dismissPopup}
+            style={{
+              background: 'none', border: 'none', color: 'inherit',
+              opacity: 0.6, cursor: 'pointer', fontSize: '1.1rem',
+              padding: '0 0.25rem', flexShrink: 0,
+            }}
+          >✕</button>
+        </div>
+      </div>
+    )}
+
     <div className="solve-grid">
 
       {/* ── Mobile tab bar ──────────────────────────────────── */}
@@ -269,5 +306,6 @@ export default function Solve() {
       </div>
 
     </div>
+    </>
   )
 }
