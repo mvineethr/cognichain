@@ -651,3 +651,127 @@ button.danger:hover { filter: brightness(1.1); }
   h2 { font-size: 1.25rem; }
   h3 { font-size: 1.1rem; }
 }
+
+/* ── Share buttons (after-solve) ─────────────────────────────── */
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--bg-darker);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.share-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* ── Onboarding modal ────────────────────────────────────────── */
+.onboard-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8,12,20,0.85);
+  backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: onboardFade 0.2s ease-out;
+}
+@keyframes onboardFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.onboard-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  animation: onboardSlide 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes onboardSlide {
+  from { transform: translateY(20px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0)    scale(1);    opacity: 1; }
+}
+.onboard-step-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.onboard-dots {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin: 1.5rem 0 1rem;
+}
+.onboard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.2s;
+}
+.onboard-dot.active {
+  background: var(--accent);
+  width: 22px;
+  border-radius: 4px;
+}
+
+/* ── Floating feedback button ───────────────────────────────── */
+.feedback-fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  z-index: 9000;
+  transition: all 0.15s;
+}
+.feedback-fab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+}
+@media (max-width: 768px) {
+  .feedback-fab {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ── Empty state polish ─────────────────────────────────────── */
+.empty-state-cta {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.6rem 1.5rem;
+  background: var(--accent);
+  color: var(--bg-dark);
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+.empty-state-cta:hover {
+  transform: translateY(-2px);
+}

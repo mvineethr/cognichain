@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { useAuth } from '../context/AuthContext'
 import PostCard from '../components/PostCard'
@@ -150,8 +151,13 @@ export default function Feed() {
           color: 'var(--text-muted)',
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🌱</div>
-          <h3>The feed is empty</h3>
-          <p>Be the first to post — solve a problem or share something!</p>
+          <h3>The feed is quiet right now</h3>
+          <p style={{ marginBottom: '0.5rem' }}>
+            Solve today's challenge — your solve will be the first thing here.
+          </p>
+          <Link to="/daily" className="empty-state-cta">
+            ⭐ Try today's challenge
+          </Link>
         </div>
       ) : (
         <div className="flex-col" style={{ gap: '1rem' }}>

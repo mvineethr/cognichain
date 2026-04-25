@@ -2,6 +2,8 @@ import { Outlet, NavLink, useNavigate, useMatch } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useEffect, useState } from 'react'
 import PointsBadge from './PointsBadge'
+import OnboardingModal from './OnboardingModal'
+import FeedbackButton from './FeedbackButton'
 
 const NAV_LINKS = [
   { to: '/',            label: 'Feed',        icon: '🏠' },
@@ -106,6 +108,12 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* First-time onboarding */}
+      <OnboardingModal />
+
+      {/* Floating feedback button (hidden on /solve to avoid covering submit) */}
+      {!isSolving && <FeedbackButton />}
 
     </div>
   )

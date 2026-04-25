@@ -115,8 +115,11 @@ export default function Leaderboard() {
       ) : entries.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏁</div>
-          <h3>No entries yet</h3>
-          <p>Be the first to solve a problem and claim the top spot!</p>
+          <h3>The leaderboard is wide open</h3>
+          <p>Solve a problem now and claim the top spot.</p>
+          <Link to="/daily" className="empty-state-cta">
+            ⭐ Try today's challenge
+          </Link>
         </div>
       ) : (
         <div style={{ overflowX: 'auto' }}>

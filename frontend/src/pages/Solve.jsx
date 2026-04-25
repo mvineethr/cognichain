@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
 import GuideChat from '../components/GuideChat'
 
-const isMobile = () => window.innerWidth <= 768
-
 const DIFF_COLORS = {
   novice:     'var(--diff-novice)',
   apprentice: 'var(--diff-apprentice)',
@@ -15,10 +13,21 @@ const DIFF_COLORS = {
 // How long before nudging user toward the guide (ms)
 const GUIDE_HINT_DELAY = 90_000 // 90 seconds
 
+const SHARE_URL = typeof window !== 'undefined' ? window.location.origin : ''
+
 function formatTime(secs) {
   const m = Math.floor(secs / 60)
   const s = secs % 60
   return m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
+// Safe back navigation — falls back to /problems if there's no history
+function goBackOrFallback(navigate) {
+  if (typeof window !== 'undefined' && window.history.length > 1) {
+    navigate(-1)
+  } else {
+    navigate('/problems')
+  }
 }
 
 export default function Solve() {
@@ -34,11 +43,17 @@ export default function Solve() {
   const [mobileTab, setMobileTab]   = useState('problem')
   const [guideHint, setGuideHint]   = useState(false)
   const [wrongPopup, setWrongPopup] = useState(null)   // { message } | null
+  const [shareOpen, setShareOpen]   = useState(false)
 
   const startRef    = useRef(Date.now())
   const timerRef    = useRef(null)
   const hintRef     = useRef(null)
   const popupRef    = useRef(null)   // setTimeout for auto-dismiss
+
+  // ── Tick that re-derives elapsed from startRef (drift-proof) ──
+  const tick = useCallback(() => {
+    setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
+  }, [])
 
   // ── Start / clear the guide hint timer ────────────────────────
   const startHintTimer = useCallback(() => {
@@ -60,10 +75,12 @@ export default function Solve() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
 
-    // Elapsed timer
-    timerRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
-    }, 1000)
+    // Elapsed timer — recomputes from startRef each tick
+    timerRef.current = setInterval(tick, 1000)
+
+    // Re-sync timer when tab becomes visible again (mobile pauses setInterval)
+    const onVis = () => { if (!document.hidden) tick() }
+    document.addEventListener('visibilitychange', onVis)
 
     // Guide hint timer
     startHintTimer()
@@ -71,7 +88,10 @@ export default function Solve() {
     return () => {
       clearInterval(timerRef.current)
       clearTimeout(hintRef.current)
+      clearTimeout(popupRef.current)
+      document.removeEventListener('visibilitychange', onVis)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   // ── Open guide (clears hint, switches mobile tab) ──────────────
@@ -92,13 +112,12 @@ export default function Solve() {
     setWrongPopup(null)
   }, [])
 
-  // ── Resume elapsed timer ───────────────────────────────────────
+  // ── Resume elapsed timer (after submit pause) ─────────────────
   const resumeTimer = useCallback(() => {
     startRef.current = Date.now() - elapsed * 1000
-    timerRef.current = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startRef.current) / 1000))
-    }, 1000)
-  }, [elapsed])
+    clearInterval(timerRef.current)
+    timerRef.current = setInterval(tick, 1000)
+  }, [elapsed, tick])
 
   // ── Submit solution ────────────────────────────────────────────
   const handleSubmit = async (e) => {
@@ -117,7 +136,8 @@ export default function Solve() {
       setResult(res)
       setSolution('')
       if (res.is_correct) {
-        setTimeout(() => navigate(-1), 2500)
+        // Plausible event (no-op if Plausible not loaded)
+        try { window.plausible?.('Problem Solved', { props: { difficulty: problem?.difficulty } }) } catch {}
       } else {
         // Wrong — show popup, resume timer, restart hint countdown
         showWrongAnswer(res.message)
@@ -131,6 +151,24 @@ export default function Solve() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // ── Share helpers ─────────────────────────────────────────────
+  const shareText = problem
+    ? `I just solved "${problem.title}" on CogniChain 🧠⚡ Try it: ${SHARE_URL}`
+    : ''
+
+  const shareLinks = {
+    twitter:  `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+    reddit:   `https://www.reddit.com/submit?title=${encodeURIComponent(problem?.title || 'CogniChain')}&url=${encodeURIComponent(SHARE_URL)}`,
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`,
+  }
+
+  const copyShare = async () => {
+    try {
+      await navigator.clipboard.writeText(shareText)
+      try { window.plausible?.('Share Copied') } catch {}
+    } catch {}
   }
 
   if (loading) return <div className="loading">Loading problem...</div>
@@ -261,10 +299,37 @@ export default function Solve() {
                   🏆 Badges: {result.badges_earned.join(', ')}
                 </p>
               )}
+
+              {/* ── Share-after-solve ── */}
               {result.is_correct && (
-                <p className="text-sm" style={{ marginTop: '0.5rem', opacity: 0.75 }}>
-                  Redirecting to feed in 2 seconds...
-                </p>
+                <div style={{ marginTop: '1rem' }}>
+                  <p className="text-sm" style={{ margin: '0 0 0.5rem', opacity: 0.8 }}>
+                    Share your win and challenge your friends:
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <a href={shareLinks.twitter}  target="_blank" rel="noopener noreferrer" className="share-btn">𝕏 Twitter</a>
+                    <a href={shareLinks.reddit}   target="_blank" rel="noopener noreferrer" className="share-btn">🔶 Reddit</a>
+                    <a href={shareLinks.whatsapp} target="_blank" rel="noopener noreferrer" className="share-btn">💬 WhatsApp</a>
+                    <button onClick={copyShare} className="share-btn" type="button">📋 Copy</button>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => goBackOrFallback(navigate)}
+                      className="secondary"
+                      style={{ flex: 1 }}
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/problems')}
+                      style={{ flex: 1 }}
+                    >
+                      Solve another →
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           )}
