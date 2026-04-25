@@ -591,10 +591,12 @@ button.danger:hover { filter: brightness(1.1); }
 
 /* ── Solve mobile tabs (hidden on desktop) ────────────────────── */
 .solve-mobile-tabs { display: none; }
-.solve-panel-hidden { display: none !important; }
+/* On desktop both panels are always visible — only hide via tabs on mobile */
 
 @media (max-width: 768px) {
   /* Solve page becomes full-height tab layout */
+  .solve-panel-hidden { display: none !important; }
+
   .solve-grid {
     grid-template-columns: 1fr;
     height: calc(100dvh - 56px);
