@@ -138,10 +138,15 @@ Export pipeline (Supabase → JSONL) not built yet — do this once real users a
 6. ✅ Guide hint nudge (90s)
 7. ✅ Wrong answer popup
 8. ✅ Peer review answers in feed (with reasoning block)
-9. → Reddit/Discord/friends soft launch (in progress)
-10. Build reasoning data export pipeline (Supabase → JSONL)
-11. Domain purchase + rename to Nautz (at launch)
-12. Pro tier paywall (Stripe) — after 500-1000 users
+9. ✅ Onboarding modal + share-after-solve + feedback widget + OG tags
+10. → Reddit/Discord/friends soft launch (in progress)
+11. Add Plausible analytics (sign up at plausible.io, paste script in index.html)
+    - `window.plausible?.(...)` event hooks already in Solve/Onboarding/Feedback
+    - Will start tracking automatically once script is added
+12. Generate OG image (1200×630 PNG) → drop in `frontend/public/og-image.png`
+13. Build reasoning data export pipeline (Supabase → JSONL)
+14. Domain purchase + rename to Nautz (at launch)
+15. Pro tier paywall (Stripe) — after 500-1000 users
 
 ## Reasoning Model Vision
 - Collect: ai_sessions (chat history) + solutions (answers, time) + peer_review comments
