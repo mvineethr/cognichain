@@ -775,3 +775,75 @@ button.danger:hover { filter: brightness(1.1); }
 .empty-state-cta:hover {
   transform: translateY(-2px);
 }
+
+/* ── Guest mode UI ───────────────────────────────────────────── */
+
+/* Banner shown at top of Solve page */
+.guest-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 1rem;
+  background: linear-gradient(135deg, rgba(110,231,168,0.08), rgba(110,231,168,0.02));
+  border: 1px solid rgba(110,231,168,0.25);
+  border-radius: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.guest-banner-link {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.guest-banner-link:hover { text-decoration: underline; }
+
+/* Locked nav items (leaderboard/feed for guests) */
+.nav-item-locked {
+  opacity: 0.45;
+  position: relative;
+}
+.nav-item-locked .nav-lock {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.nav-item-locked:hover {
+  opacity: 0.7;
+}
+
+/* Guest CTA card in sidebar bottom */
+.guest-card {
+  background: linear-gradient(135deg, rgba(110,231,168,0.08), rgba(110,231,168,0.02));
+  border: 1px solid rgba(110,231,168,0.25);
+  border-radius: 12px;
+  padding: 12px;
+}
+.guest-card-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.guest-card-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.guest-card-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-darker);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.guest-card-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}

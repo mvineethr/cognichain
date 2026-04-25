@@ -16,10 +16,24 @@ import Layout      from './components/Layout'
 
 import './index.css'
 
+/**
+ * Allows real users OR guests through. Pages decide what to gate
+ * for guests (Feed/Leaderboard/Profile redirect; Solve/Daily/Problems work).
+ */
 function PrivateRoute({ children }) {
-  const { user, loading } = useAuth()
+  const { user, isGuest, loading } = useAuth()
   if (loading) return <div className="loading">Loading...</div>
-  return user ? children : <Navigate to="/login" replace />
+  return (user || isGuest) ? children : <Navigate to="/login" replace />
+}
+
+/**
+ * For pages that real users see but guests should be redirected away from
+ * (Feed, Leaderboard, Profile). Wraps a PrivateRoute child.
+ */
+function MembersOnly({ children }) {
+  const { user, isGuest } = useAuth()
+  if (isGuest && !user) return <Navigate to="/daily" replace />
+  return children
 }
 
 function App() {
@@ -34,13 +48,13 @@ function App() {
 
           {/* Protected routes */}
           <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
-            <Route index                    element={<Feed />} />
+            <Route index                    element={<MembersOnly><Feed /></MembersOnly>} />
             <Route path="daily"             element={<Daily />} />
             <Route path="problems"          element={<Problems />} />
             <Route path="solve/:id"         element={<Solve />} />
-            <Route path="profile"           element={<Profile />} />
-            <Route path="profile/:username" element={<Profile />} />
-            <Route path="leaderboard"       element={<Leaderboard />} />
+            <Route path="profile"           element={<MembersOnly><Profile /></MembersOnly>} />
+            <Route path="profile/:username" element={<MembersOnly><Profile /></MembersOnly>} />
+            <Route path="leaderboard"       element={<MembersOnly><Leaderboard /></MembersOnly>} />
           </Route>
         </Routes>
       </BrowserRouter>

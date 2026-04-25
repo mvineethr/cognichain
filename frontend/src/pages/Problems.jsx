@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
+import { getGuestSolveIds } from '../lib/guest'
 
 const DIFFICULTY_ORDER = ['novice', 'apprentice', 'expert', 'master']
 const DIFFICULTY_META = {
@@ -139,6 +141,7 @@ function ProblemRow({ problem, solved }) {
 }
 
 export default function Problems() {
+  const { isGuest } = useAuth()
   const [categories, setCategories]           = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [problems, setProblems]               = useState([])
@@ -150,21 +153,32 @@ export default function Problems() {
   useEffect(() => {
     const init = async () => {
       try {
-        const [cats, solutions] = await Promise.all([
-          api.getCategories(),
-          api.mySolutions(),
-        ])
-        setCategories(cats)
-        const solved = new Set((solutions || []).filter(s => s.is_correct).map(s => s.problem_id))
-        setSolvedIds(solved)
+        if (isGuest) {
+          // Guests: no /solutions/me access; track solves locally
+          const cats = await api.getCategories()
+          setCategories(cats)
+          const localSolved = new Set(getGuestSolveIds())
+          setSolvedIds(localSolved)
+          const counts = {}
+          cats.forEach(c => { counts[c.id] = { solved: 0, total: c.problem_count || 0 } })
+          setCategoryCounts(counts)
+        } else {
+          const [cats, solutions] = await Promise.all([
+            api.getCategories(),
+            api.mySolutions(),
+          ])
+          setCategories(cats)
+          const solved = new Set((solutions || []).filter(s => s.is_correct).map(s => s.problem_id))
+          setSolvedIds(solved)
 
-        // Build per-category solved counts from all problems
-        const counts = {}
-        cats.forEach(c => { counts[c.id] = { solved: 0, total: c.problem_count || 0 } })
-        ;(solutions || []).filter(s => s.is_correct).forEach(s => {
-          if (s.category_id && counts[s.category_id]) counts[s.category_id].solved++
-        })
-        setCategoryCounts(counts)
+          // Build per-category solved counts from all problems
+          const counts = {}
+          cats.forEach(c => { counts[c.id] = { solved: 0, total: c.problem_count || 0 } })
+          ;(solutions || []).filter(s => s.is_correct).forEach(s => {
+            if (s.category_id && counts[s.category_id]) counts[s.category_id].solved++
+          })
+          setCategoryCounts(counts)
+        }
       } catch (err) {
         setError(err.message)
       } finally {
@@ -172,7 +186,7 @@ export default function Problems() {
       }
     }
     init()
-  }, [])
+  }, [isGuest])
 
   useEffect(() => {
     if (!selectedCategory) return

@@ -68,3 +68,39 @@ async def ask_guide(payload: GuideIn, user: dict = Depends(get_current_user)):
 
     session_id = session_res.data[0]["id"] if session_res.data else "unknown"
     return {"reply": reply, "session_id": session_id}
+
+
+# ── POST /guide/guest ─────────────────────────────────────────
+# Guest (no-signin) variant — does NOT persist to ai_sessions.
+# Frontend enforces a 3-message-per-problem limit.
+@router.post("/guest", response_model=GuideOut)
+async def ask_guide_guest(payload: GuideIn):
+    svc = get_service_client()
+
+    prob_res = svc.table("problems").select("title, body").eq("id", payload.problem_id).limit(1).execute()
+    if not prob_res.data:
+        raise HTTPException(status_code=404, detail="Problem not found")
+
+    problem = prob_res.data[0]
+    system  = f"{GUIDE_SYSTEM_PROMPT}\n\nPROBLEM:\nTitle: {problem['title']}\n{problem['body']}"
+
+    messages = [{"role": m.role, "content": m.content} for m in payload.history]
+    messages.append({"role": "user", "content": payload.message})
+
+    # Backstop: cap history length so guests can't bypass client limit by
+    # crafting a long history payload server-side.
+    if len(messages) > 8:
+        raise HTTPException(status_code=429, detail="Guest guide limit reached. Sign up for unlimited guidance.")
+
+    try:
+        response = anthropic.messages.create(
+            model      = "claude-sonnet-4-5",
+            max_tokens = 300,
+            system     = system,
+            messages   = messages,
+        )
+        reply = response.content[0].text
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"AI guide unavailable: {str(e)}")
+
+    return {"reply": reply, "session_id": "guest"}

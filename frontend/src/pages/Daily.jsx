@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
+import { useAuth } from '../context/AuthContext'
+import { getGuestSolveIds } from '../lib/guest'
 
 const DIFF_COLORS = {
   novice:     'var(--diff-novice)',
@@ -22,6 +24,7 @@ const CAT_ICONS = {
 }
 
 export default function Daily() {
+  const { isGuest } = useAuth()
   const [dailySet, setDailySet]   = useState(null)
   const [profile, setProfile]     = useState(null)
   const [solvedIds, setSolvedIds] = useState(new Set())
@@ -31,16 +34,23 @@ export default function Daily() {
   useEffect(() => {
     const init = async () => {
       try {
-        const [ds, prof, sols] = await Promise.all([
-          api.getDailySet(),
-          api.getMyProfile(),
-          api.mySolutions(),
-        ])
-        setDailySet(ds)
-        setProfile(prof)
-        setSolvedIds(new Set(
-          (sols || []).filter(s => s.is_correct).map(s => s.problem_id)
-        ))
+        if (isGuest) {
+          // Guests: skip profile + solutions (auth-required); use localStorage instead
+          const ds = await api.getDailySet()
+          setDailySet(ds)
+          setSolvedIds(new Set(getGuestSolveIds()))
+        } else {
+          const [ds, prof, sols] = await Promise.all([
+            api.getDailySet(),
+            api.getMyProfile(),
+            api.mySolutions(),
+          ])
+          setDailySet(ds)
+          setProfile(prof)
+          setSolvedIds(new Set(
+            (sols || []).filter(s => s.is_correct).map(s => s.problem_id)
+          ))
+        }
       } catch (err) {
         setError(err.message)
       } finally {
@@ -48,7 +58,7 @@ export default function Daily() {
       }
     }
     init()
-  }, [])
+  }, [isGuest])
 
   if (loading) return <div className="loading">Loading today's challenges...</div>
   if (error)   return <div className="error">{error}</div>

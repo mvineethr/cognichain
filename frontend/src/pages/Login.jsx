@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
+import { GUEST_MAX_SOLVES, GUEST_MAX_GUIDE_PER_PROB } from '../lib/guest'
 
 export default function Login() {
+  const { startGuest } = useAuth()
   const [tab, setTab]           = useState('signin')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -211,6 +214,29 @@ export default function Login() {
               </button>
             </form>
           )}
+
+          {/* ── Guest mode ── */}
+          <div style={{
+            marginTop: '1.25rem',
+            paddingTop: '1.25rem',
+            borderTop: '1px solid var(--border)',
+            textAlign: 'center',
+          }}>
+            <p className="text-sm text-muted" style={{ margin: '0 0 0.6rem' }}>
+              Just want to look around?
+            </p>
+            <button
+              type="button"
+              onClick={() => { startGuest(); navigate('/daily') }}
+              className="secondary"
+              style={{ width: '100%' }}
+            >
+              👀 Try without signing in
+            </button>
+            <p className="text-sm text-muted" style={{ margin: '0.6rem 0 0', fontSize: '0.78rem' }}>
+              {GUEST_MAX_SOLVES} free problems · {GUEST_MAX_GUIDE_PER_PROB} guide messages each · no points or leaderboard
+            </p>
+          </div>
         </div>
 
         {/* Footer links */}

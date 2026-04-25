@@ -1,7 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import GuideChat from '../components/GuideChat'
+import { useAuth } from '../context/AuthContext'
+import {
+  GUEST_MAX_SOLVES,
+  recordGuestSolve,
+  getGuestSolveCount,
+  guestSolveLimitReached,
+  guestSolvesRemaining,
+} from '../lib/guest'
 
 const DIFF_COLORS = {
   novice:     'var(--diff-novice)',
@@ -33,7 +41,9 @@ function goBackOrFallback(navigate) {
 export default function Solve() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isGuest } = useAuth()
   const [problem, setProblem]       = useState(null)
+  const [showGate, setShowGate]     = useState(false)  // signup gate after limit
   const [solution, setSolution]     = useState('')
   const [loading, setLoading]       = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -123,21 +133,37 @@ export default function Solve() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!solution.trim()) { setError('Please enter a solution'); return }
+
+    // Guest limit check (before hitting API)
+    if (isGuest && guestSolveLimitReached() && !result?.is_correct) {
+      setShowGate(true)
+      return
+    }
+
     clearInterval(timerRef.current)
     clearHint()
     setSubmitting(true)
     setError('')
     try {
-      const res = await api.submitSolution({
+      const payload = {
         problem_id:      id,
         content:         solution,
         time_taken_secs: elapsed,
-      })
+      }
+      const res = isGuest
+        ? await api.guestCheckSolution(payload)
+        : await api.submitSolution(payload)
       setResult(res)
       setSolution('')
       if (res.is_correct) {
-        // Plausible event (no-op if Plausible not loaded)
-        try { window.plausible?.('Problem Solved', { props: { difficulty: problem?.difficulty } }) } catch {}
+        if (isGuest) {
+          recordGuestSolve(id)
+          // Show gate immediately if this was their last allowed solve
+          if (guestSolveLimitReached()) {
+            setTimeout(() => setShowGate(true), 1500)
+          }
+        }
+        try { window.plausible?.('Problem Solved', { props: { difficulty: problem?.difficulty, guest: isGuest } }) } catch {}
       } else {
         // Wrong — show popup, resume timer, restart hint countdown
         showWrongAnswer(res.message)
@@ -177,8 +203,33 @@ export default function Solve() {
   const diffColor = DIFF_COLORS[problem.difficulty] || 'var(--accent)'
   const icon      = problem.category_icon || '❓'
 
+  const guestRemaining = isGuest ? guestSolvesRemaining() : null
+
   return (
     <>
+    {/* ── Guest signup gate (after limit) ───────────────────── */}
+    {showGate && (
+      <div className="onboard-overlay" onClick={() => setShowGate(false)}>
+        <div className="onboard-card" onClick={e => e.stopPropagation()}>
+          <div className="onboard-step-icon">🎉</div>
+          <h2 style={{ margin: '0 0 0.5rem', textAlign: 'center' }}>
+            You've used your {GUEST_MAX_SOLVES} free solves
+          </h2>
+          <p style={{ margin: 0, textAlign: 'center', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            Sign up free to keep solving, save your progress, earn points, and join the leaderboard.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
+            <Link to="/login" style={{ textDecoration: 'none' }}>
+              <button style={{ width: '100%' }}>✨ Create free account</button>
+            </Link>
+            <button onClick={() => setShowGate(false)} className="secondary">
+              Not yet
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
     {/* ── Wrong answer popup ───────────────────────────────── */}
     {wrongPopup && (
       <div className="wrong-popup" onClick={dismissPopup}>
@@ -223,6 +274,14 @@ export default function Solve() {
         className={`solve-panel${mobileTab !== 'problem' ? ' solve-panel-hidden' : ''}`}
         style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflow: 'auto' }}
       >
+        {/* Guest banner */}
+        {isGuest && (
+          <div className="guest-banner">
+            <span>👀 <strong>Guest mode</strong> · {guestRemaining} of {GUEST_MAX_SOLVES} free solves left</span>
+            <Link to="/login" className="guest-banner-link">Sign up free →</Link>
+          </div>
+        )}
+
         {/* Problem card */}
         <div className="card">
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', marginBottom: '1rem' }}>
@@ -234,9 +293,16 @@ export default function Solve() {
                 <span className="badge" style={{ background: `${diffColor}18`, color: diffColor }}>
                   {problem.difficulty}
                 </span>
-                {problem.is_daily && <span className="badge gold">⭐ Daily +25 bonus</span>}
-                <span className="badge primary" style={{ marginLeft: 'auto' }}>
-                  +{problem.token_reward} pts
+                {problem.is_daily && !isGuest && <span className="badge gold">⭐ Daily +25 bonus</span>}
+                <span
+                  className="badge primary"
+                  style={{
+                    marginLeft: 'auto',
+                    ...(isGuest ? { opacity: 0.4, background: 'var(--bg-darker)', color: 'var(--text-muted)' } : {}),
+                  }}
+                  title={isGuest ? 'Sign up to earn points' : ''}
+                >
+                  {isGuest ? '— pts (sign up to earn)' : `+${problem.token_reward} pts`}
                 </span>
               </div>
             </div>
@@ -301,7 +367,7 @@ export default function Solve() {
               )}
 
               {/* ── Share-after-solve ── */}
-              {result.is_correct && (
+              {result.is_correct && !isGuest && (
                 <div style={{ marginTop: '1rem' }}>
                   <p className="text-sm" style={{ margin: '0 0 0.5rem', opacity: 0.8 }}>
                     Share your win and challenge your friends:
@@ -328,6 +394,32 @@ export default function Solve() {
                     >
                       Solve another →
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Guest after-solve — push toward signup */}
+              {result.is_correct && isGuest && (
+                <div style={{ marginTop: '1rem' }}>
+                  <p className="text-sm" style={{ margin: '0 0 0.75rem', opacity: 0.85 }}>
+                    {guestSolveLimitReached()
+                      ? '🎯 That was your last free solve. Create a free account to keep going.'
+                      : `${guestSolvesRemaining()} of ${GUEST_MAX_SOLVES} free solves left. Sign up to save your progress and earn points.`}
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <Link to="/login" style={{ flex: 1, textDecoration: 'none' }}>
+                      <button style={{ width: '100%' }}>✨ Sign up free</button>
+                    </Link>
+                    {!guestSolveLimitReached() && (
+                      <button
+                        type="button"
+                        onClick={() => navigate('/problems')}
+                        className="secondary"
+                        style={{ flex: 1 }}
+                      >
+                        Next problem →
+                      </button>
+                    )}
                   </div>
                 </div>
               )}

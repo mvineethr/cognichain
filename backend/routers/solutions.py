@@ -220,6 +220,45 @@ def submit_solution(payload: SolutionIn, user: dict = Depends(get_current_user))
         "badges_earned":  badges_earned,
     }
 
+# ── POST /solutions/guest-check ───────────────────────────────
+# Verifies an answer without persisting. Used by guest (no-signin) mode.
+# No DB writes, no points, no posts, no badges.
+@router.post("/guest-check")
+def guest_check_solution(payload: SolutionIn):
+    svc = get_service_client()
+
+    prob_res = svc.table("problems").select("*").eq("id", payload.problem_id).limit(1).execute()
+    if not prob_res.data:
+        raise HTTPException(status_code=404, detail="Problem not found")
+    prob = prob_res.data[0]
+
+    answer_type = prob["answer_type"]
+    is_correct  = False
+
+    if answer_type == "exact":
+        is_correct = _verify_exact(payload.content, prob["correct_answer"] or "")
+    elif answer_type == "numeric":
+        is_correct = _verify_numeric(payload.content, prob["correct_answer"] or "")
+    elif answer_type == "peer_review":
+        # Guests can't submit peer-reviewed answers (require an account for community feedback)
+        raise HTTPException(status_code=403, detail="Peer-reviewed problems require a free account")
+
+    if is_correct:
+        msg = "Correct! 🎉 Sign up to keep your progress and earn points."
+    else:
+        msg = "Not quite — keep thinking!"
+
+    return {
+        "id":             "guest",
+        "problem_id":     payload.problem_id,
+        "is_correct":     is_correct,
+        "points_awarded": 0,
+        "message":        msg,
+        "streak":         None,
+        "badges_earned":  [],
+    }
+
+
 # ── GET /solutions/me ─────────────────────────────────────────
 @router.get("/me")
 def my_solutions(user: dict = Depends(get_current_user)):

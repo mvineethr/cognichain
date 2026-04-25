@@ -37,11 +37,13 @@ export const api = {
   getProblem: (id) => request('GET', `/problems/${id}`),
 
   // ── Solutions ─────────────────────────────────────────────
-  submitSolution: (body) => request('POST', '/solutions', body),
-  mySolutions:    ()     => request('GET',  '/solutions/me'),
+  submitSolution:    (body) => request('POST', '/solutions', body),
+  guestCheckSolution:(body) => request('POST', '/solutions/guest-check', body),
+  mySolutions:       ()     => request('GET',  '/solutions/me'),
 
   // ── AI Guide ──────────────────────────────────────────────
-  askGuide: (body) => request('POST', '/guide', body),
+  askGuide:      (body) => request('POST', '/guide', body),
+  askGuideGuest: (body) => request('POST', '/guide/guest', body),
 
   // ── Users ─────────────────────────────────────────────────
   getMyProfile: ()           => request('GET', '/users/me'),
