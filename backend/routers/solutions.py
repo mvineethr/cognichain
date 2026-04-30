@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from database import get_client, get_service_client
 from models import SolutionIn, SolutionOut
 from auth import get_current_user
+from ratelimit import limiter
 from datetime import date
 
 router = APIRouter()
@@ -59,7 +60,8 @@ def _check_and_award_badges(user_id: str, svc) -> list[str]:
 
 # ── POST /solutions ───────────────────────────────────────────
 @router.post("", response_model=SolutionOut)
-def submit_solution(payload: SolutionIn, user: dict = Depends(get_current_user)):
+@limiter.limit("30/minute")
+def submit_solution(request: Request, payload: SolutionIn, user: dict = Depends(get_current_user)):
     client = get_client()
     svc    = get_service_client()
 
@@ -224,7 +226,8 @@ def submit_solution(payload: SolutionIn, user: dict = Depends(get_current_user))
 # Verifies an answer without persisting. Used by guest (no-signin) mode.
 # No DB writes, no points, no posts, no badges.
 @router.post("/guest-check")
-def guest_check_solution(payload: SolutionIn):
+@limiter.limit("5/15minutes")
+def guest_check_solution(request: Request, payload: SolutionIn):
     svc = get_service_client()
 
     prob_res = svc.table("problems").select("*").eq("id", payload.problem_id).limit(1).execute()

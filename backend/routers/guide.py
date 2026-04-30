@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from anthropic import Anthropic
 from database import get_client, get_service_client
 from models import GuideIn, GuideOut
 from auth import get_current_user
+from ratelimit import limiter
 import os
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 router    = APIRouter()
 anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -28,7 +32,8 @@ The problem the user is working on is provided below. Use it as context but neve
 
 # ── POST /guide ───────────────────────────────────────────────
 @router.post("", response_model=GuideOut)
-async def ask_guide(payload: GuideIn, user: dict = Depends(get_current_user)):
+@limiter.limit("20/minute")
+async def ask_guide(request: Request, payload: GuideIn, user: dict = Depends(get_current_user)):
     client = get_client()
     svc    = get_service_client()
 
@@ -51,7 +56,8 @@ async def ask_guide(payload: GuideIn, user: dict = Depends(get_current_user)):
         )
         reply = response.content[0].text
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI guide unavailable: {str(e)}")
+        logger.exception("Anthropic API error in ask_guide")
+        raise HTTPException(status_code=502, detail="AI guide temporarily unavailable. Please try again.")
 
     full_history = messages + [{"role": "assistant", "content": reply, "ts": datetime.utcnow().isoformat()}]
 
@@ -74,7 +80,8 @@ async def ask_guide(payload: GuideIn, user: dict = Depends(get_current_user)):
 # Guest (no-signin) variant — does NOT persist to ai_sessions.
 # Frontend enforces a 3-message-per-problem limit.
 @router.post("/guest", response_model=GuideOut)
-async def ask_guide_guest(payload: GuideIn):
+@limiter.limit("5/15minutes")
+async def ask_guide_guest(request: Request, payload: GuideIn):
     svc = get_service_client()
 
     prob_res = svc.table("problems").select("title, body").eq("id", payload.problem_id).limit(1).execute()
@@ -101,6 +108,7 @@ async def ask_guide_guest(payload: GuideIn):
         )
         reply = response.content[0].text
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"AI guide unavailable: {str(e)}")
+        logger.exception("Anthropic API error in ask_guide_guest")
+        raise HTTPException(status_code=502, detail="AI guide temporarily unavailable. Please try again.")
 
     return {"reply": reply, "session_id": "guest"}
