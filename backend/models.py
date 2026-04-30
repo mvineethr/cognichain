@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime, date
+import json
 
 
 # ── Auth ─────────────────────────────────────────────────────
@@ -43,13 +44,13 @@ class SolutionOut(BaseModel):
 
 # ── AI Guide ─────────────────────────────────────────────────
 class GuideMessage(BaseModel):
-    role: str                 # 'user' | 'assistant'
-    content: str
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str = Field(..., min_length=1, max_length=5000)
 
 class GuideIn(BaseModel):
     problem_id: str
     message: str = Field(..., min_length=1, max_length=2000)
-    history: List[GuideMessage] = []
+    history: List[GuideMessage] = Field(default_factory=list, max_length=20)
 
 class GuideOut(BaseModel):
     reply: str
@@ -73,7 +74,14 @@ class PostIn(BaseModel):
     type: str = Field(..., pattern="^(status|help)$")
     content: str = Field(..., min_length=1, max_length=1000)
     problem_id: Optional[str] = None
-    metadata: Optional[dict] = {}
+    metadata: Optional[dict] = Field(default_factory=dict)
+
+    @field_validator("metadata")
+    @classmethod
+    def metadata_size_limit(cls, v):
+        if v and len(json.dumps(v)) > 2000:
+            raise ValueError("metadata too large")
+        return v
 
 class CommentIn(BaseModel):
     content: str = Field(..., min_length=1, max_length=500)

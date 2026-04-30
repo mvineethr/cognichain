@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from ratelimit import limiter
 import os
 
 from routers import problems, solutions, guide, users, leaderboard, feed
@@ -13,6 +16,9 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # ── CORS ─────────────────────────────────────────────────────
 _origins = [
     "http://localhost:5173",
@@ -23,8 +29,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o for o in _origins if o],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # ── Routers ──────────────────────────────────────────────────
