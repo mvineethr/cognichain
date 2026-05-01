@@ -10,7 +10,7 @@ export default function FeedbackButton() {
   const submit = (e) => {
     e.preventDefault()
     if (!text.trim()) return
-    const subject = encodeURIComponent('CogniChain feedback')
+    const subject = encodeURIComponent('Puzzld feedback')
     const body    = encodeURIComponent(`${text}\n\n---\nFrom: ${window.location.href}`)
     window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`
     try { window.plausible?.('Feedback Submitted') } catch {}

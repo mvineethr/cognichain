@@ -1,8 +1,8 @@
-# Nautz (formerly CogniChain) — Session Handoff
+# Puzzld (formerly CogniChain) — Session Handoff
 
 ## Project Name
-Working name is **Nautz** — do not rename files/repos yet, rename closer to launch.
-Current repo/deploy still uses "cognichain" everywhere.
+App name is **Puzzld** — domain will be puzzld.io (not yet purchased).
+Repo/deploy infra still uses "cognichain" slug (Railway, Vercel, GitHub) — rename those when domain is ready.
 
 ## What This App Is
 A problem-solving platform where users solve math, science, logic, puzzles, aptitude
@@ -144,7 +144,7 @@ Export pipeline (Supabase → JSONL) not built yet — do this once real users a
 - AdSense: needs Google approval + real traffic before ads show
 - No paywall / Pro tier yet (intentional — wait for 500-1000 users)
 - Reasoning data export pipeline not built yet (Supabase → JSONL)
-- Rename to Nautz at launch (check nautz.ai and nautz.app domains)
+- Domain puzzld.io not yet purchased — grab before launch
 - OG image missing: need 1200×630 PNG → drop in frontend/public/og-image.png
 - Plausible analytics deferred: script not added yet, but all event hooks
   (window.plausible?.) are already wired in Solve/Onboarding/Feedback
@@ -193,7 +193,7 @@ Export pipeline (Supabase → JSONL) not built yet — do this once real users a
 14. Add Plausible analytics — sign up plausible.io, paste 1 script tag in index.html
     (all window.plausible?.() hooks already in place, will auto-activate)
 15. Build reasoning data export pipeline (Supabase → JSONL) — after real users arrive
-16. Domain purchase + rename to Nautz (at launch)
+16. Purchase puzzld.io + migrate Vercel/Railway to new domain
 17. Pro tier paywall (Stripe) — after 500-1000 users
 
 ## Launch Post Strategy (current)
@@ -214,7 +214,9 @@ Authentic > polished. "Tell me what's broken" gets more responses than "excited 
 - Business: users earn tokens for contributing quality data (Phase 3)
 
 ## Branding
-- Final name: **Nautz** (locked in, rename at launch)
-- Tagline ideas: "Untangle your thinking" / "Think. Solve. Earn."
-- Check nautz.ai and nautz.app domains (avoid .com — likely parked/expensive)
+- Final name: **Puzzld** (locked in)
+- Domain: puzzld.io (not yet purchased — $37.99/yr)
+- Social handle: @puzzldapp (bare @puzzld is squatted on Instagram)
+- Tagline: "Solve. Think. Earn." / "Figure it out yourself."
+- Emoji: 🧩 (replaces ⚡ CogniChain)
 - Logo concept: knot being untied / spark of insight

@@ -29,7 +29,7 @@ export default function ToS() {
       <p style={S.updated}>Last updated: April 2026</p>
 
       <p>
-        Welcome to <strong style={{ color: 'var(--text-primary)' }}>CogniChain</strong> ("we", "us", or "the Platform").
+        Welcome to <strong style={{ color: 'var(--text-primary)' }}>Puzzld</strong> ("we", "us", or "the Platform").
         By creating an account or using our services, you agree to these Terms of Service.
         Please read them carefully before registering.
       </p>
@@ -37,14 +37,14 @@ export default function ToS() {
       {/* ── Eligibility ── */}
       <h2 style={S.h2}>1. Eligibility</h2>
       <p>
-        You must be at least <strong>13 years old</strong> to use CogniChain. By creating an account,
+        You must be at least <strong>13 years old</strong> to use Puzzld. By creating an account,
         you represent that you meet this age requirement and that all information you provide is accurate.
       </p>
 
       {/* ── What the Platform Does ── */}
-      <h2 style={S.h2}>2. What CogniChain Is</h2>
+      <h2 style={S.h2}>2. What Puzzld Is</h2>
       <p>
-        CogniChain is a problem-solving platform where users solve math, science, logic,
+        Puzzld is a problem-solving platform where users solve math, science, logic,
         puzzle, and aptitude challenges guided by a Socratic AI tutor. Users earn points,
         maintain streaks, and share progress on a social feed.
       </p>
@@ -54,7 +54,7 @@ export default function ToS() {
 
       <div style={S.highlight}>
         <strong>⚠️ AI Training Disclosure</strong><br />
-        By using CogniChain, you consent to your problem-solving sessions — including your
+        By using Puzzld, you consent to your problem-solving sessions — including your
         submitted answers, AI guide conversations, and interaction patterns — being collected
         and used to train and improve AI reasoning models. This data will be anonymized
         before use and will never be linked to your personal identity in any published dataset.
@@ -78,7 +78,7 @@ export default function ToS() {
       <h2 style={S.h2}>4. User Content</h2>
       <p>
         You retain ownership of any content you create (posts, comments). By posting,
-        you grant CogniChain a non-exclusive, royalty-free license to display and distribute
+        you grant Puzzld a non-exclusive, royalty-free license to display and distribute
         that content within the Platform. You are responsible for ensuring your content does
         not violate others' rights or applicable laws.
       </p>
@@ -108,7 +108,7 @@ export default function ToS() {
       {/* ── Advertising ── */}
       <h2 style={S.h2}>7. Advertising</h2>
       <p>
-        CogniChain displays third-party advertisements (via Google AdSense) to free-tier users.
+        Puzzld displays third-party advertisements (via Google AdSense) to free-tier users.
         We do not control the content of these ads. Ad networks may use cookies to serve
         relevant advertisements. See our <Link to="/privacy" style={{ color: 'var(--accent)' }}>Privacy Policy</Link> for details.
       </p>
@@ -125,16 +125,16 @@ export default function ToS() {
       {/* ── Disclaimers ── */}
       <h2 style={S.h2}>9. Disclaimers &amp; Limitation of Liability</h2>
       <p>
-        CogniChain is provided "as is" without warranties of any kind. We do not guarantee
+        Puzzld is provided "as is" without warranties of any kind. We do not guarantee
         uninterrupted access, accuracy of AI responses, or preservation of user data.
-        To the fullest extent permitted by law, CogniChain is not liable for indirect,
+        To the fullest extent permitted by law, Puzzld is not liable for indirect,
         incidental, or consequential damages arising from your use of the Platform.
       </p>
 
       {/* ── Changes ── */}
       <h2 style={S.h2}>10. Changes to These Terms</h2>
       <p>
-        We may update these Terms periodically. Continued use of CogniChain after changes
+        We may update these Terms periodically. Continued use of Puzzld after changes
         are posted constitutes acceptance of the revised Terms. We will notify registered
         users of material changes via email where possible.
       </p>

@@ -17,7 +17,7 @@ export default function PointsBadge({ compact = false }) {
         setProfile(data)
         // Cache rank for Layout's RankBadge
         if (data?.rank_title) {
-          localStorage.setItem('cognichain_rank', data.rank_title)
+          localStorage.setItem('puzzld_rank', data.rank_title)
         }
       })
       .catch(() => {})

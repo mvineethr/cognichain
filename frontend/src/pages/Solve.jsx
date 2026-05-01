@@ -181,12 +181,12 @@ export default function Solve() {
 
   // ── Share helpers ─────────────────────────────────────────────
   const shareText = problem
-    ? `I just solved "${problem.title}" on CogniChain 🧠⚡ Try it: ${SHARE_URL}`
+    ? `I just solved "${problem.title}" on Puzzld 🧩 Try it: ${SHARE_URL}`
     : ''
 
   const shareLinks = {
     twitter:  `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-    reddit:   `https://www.reddit.com/submit?title=${encodeURIComponent(problem?.title || 'CogniChain')}&url=${encodeURIComponent(SHARE_URL)}`,
+    reddit:   `https://www.reddit.com/submit?title=${encodeURIComponent(problem?.title || 'Puzzld')}&url=${encodeURIComponent(SHARE_URL)}`,
     whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`,
   }
 
