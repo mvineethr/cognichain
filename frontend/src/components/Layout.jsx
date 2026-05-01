@@ -48,7 +48,7 @@ export default function Layout() {
 
         {/* Logo */}
         <NavLink to={isGuest ? '/daily' : '/'} className="sidebar-logo">
-          ⚡ CogniChain
+          🧩 Puzzld
         </NavLink>
 
         {/* Nav links */}
@@ -202,7 +202,7 @@ function RankBadge({ userId }) {
   const [rank, setRank] = useState(null)
 
   useEffect(() => {
-    const cached = localStorage.getItem('cognichain_rank')
+    const cached = localStorage.getItem('puzzld_rank')
     if (cached) setRank(cached)
   }, [userId])
 

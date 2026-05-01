@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router    = APIRouter()
 anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-GUIDE_SYSTEM_PROMPT = """You are the CogniChain Guide — a Socratic thinking partner.
+GUIDE_SYSTEM_PROMPT = """You are the Puzzld Guide — a Socratic thinking partner.
 
 Your ONLY job is to help the user discover the answer themselves. You MUST follow these rules absolutely:
 

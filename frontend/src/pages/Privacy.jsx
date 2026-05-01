@@ -38,7 +38,7 @@ export default function Privacy() {
       <p style={S.updated}>Last updated: April 2026</p>
 
       <p>
-        This Privacy Policy explains how <strong style={{ color: 'var(--text-primary)' }}>CogniChain</strong> ("we", "us")
+        This Privacy Policy explains how <strong style={{ color: 'var(--text-primary)' }}>Puzzld</strong> ("we", "us")
         collects, uses, and protects your personal data when you use our platform.
         We are committed to transparency — especially regarding our use of data for AI development.
       </p>
@@ -46,8 +46,8 @@ export default function Privacy() {
       {/* ── Data Controller ── */}
       <h2 style={S.h2}>1. Who We Are</h2>
       <p>
-        CogniChain is an independent platform. The data controller for your personal information
-        is the CogniChain team. You can reach us at{' '}
+        Puzzld is an independent platform. The data controller for your personal information
+        is the Puzzld team. You can reach us at{' '}
         <strong style={{ color: 'var(--text-primary)' }}>vineethmudda@gmail.com</strong>.
       </p>
 
@@ -99,7 +99,7 @@ export default function Privacy() {
       {/* ── AI Training ── */}
       <h2 style={S.h2}>3. Use of Data for AI Model Training</h2>
       <p>
-        CogniChain's long-term mission includes developing open-source AI reasoning models
+        Puzzld's long-term mission includes developing open-source AI reasoning models
         trained on real human problem-solving data. To support this:
       </p>
       <ul>
@@ -109,14 +109,14 @@ export default function Privacy() {
         <li>Anonymized datasets will never be sold; they may be released publicly as open-source research assets</li>
       </ul>
       <p>
-        By creating an account and using CogniChain, you explicitly consent to this data use
+        By creating an account and using Puzzld, you explicitly consent to this data use
         as described in our <Link to="/tos" style={{ color: 'var(--accent)' }}>Terms of Service</Link>.
       </p>
 
       {/* ── How We Use Data ── */}
       <h2 style={S.h2}>4. How We Use Your Data</h2>
       <ul>
-        <li>To provide and improve the CogniChain platform</li>
+        <li>To provide and improve the Puzzld platform</li>
         <li>To calculate points, streaks, and leaderboard rankings</li>
         <li>To power the AI guide experience (via Anthropic's Claude API)</li>
         <li>To display relevant advertising (via Google AdSense) to free-tier users</li>
@@ -160,7 +160,7 @@ export default function Privacy() {
       {/* ── Cookies ── */}
       <h2 style={S.h2}>6. Cookies</h2>
       <p>
-        CogniChain uses cookies and local storage to maintain your login session and remember
+        Puzzld uses cookies and local storage to maintain your login session and remember
         preferences. Google AdSense may set its own cookies for advertising purposes.
         You can manage or disable cookies in your browser settings; however, some features may
         not work correctly without cookies enabled.
@@ -193,7 +193,7 @@ export default function Privacy() {
       {/* ── Children ── */}
       <h2 style={S.h2}>9. Children's Privacy</h2>
       <p>
-        CogniChain is not directed at children under 13. We do not knowingly collect personal
+        Puzzld is not directed at children under 13. We do not knowingly collect personal
         data from children under 13. If you believe a child under 13 has created an account,
         please contact us and we will delete the account promptly.
       </p>
@@ -202,7 +202,7 @@ export default function Privacy() {
       <h2 style={S.h2}>10. Changes to This Policy</h2>
       <p>
         We may update this Privacy Policy periodically. We will notify registered users of
-        material changes via email. Continued use of CogniChain after changes are posted
+        material changes via email. Continued use of Puzzld after changes are posted
         constitutes acceptance of the revised policy.
       </p>
 

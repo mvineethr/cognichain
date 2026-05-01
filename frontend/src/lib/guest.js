@@ -5,9 +5,9 @@
 export const GUEST_MAX_SOLVES         = 5
 export const GUEST_MAX_GUIDE_PER_PROB = 3
 
-const KEY_FLAG    = 'cognichain_guest'
-const KEY_SOLVES  = 'cognichain_guest_solves'   // JSON array of problem IDs solved
-const KEY_GUIDE   = 'cognichain_guest_guide'    // JSON map { [problemId]: msgCount }
+const KEY_FLAG    = 'puzzld_guest'
+const KEY_SOLVES  = 'puzzld_guest_solves'   // JSON array of problem IDs solved
+const KEY_GUIDE   = 'puzzld_guest_guide'    // JSON map { [problemId]: msgCount }
 
 // ── Mode flag ────────────────────────────────────────────────
 export function isGuestMode() {

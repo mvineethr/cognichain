@@ -11,7 +11,7 @@ from routers import problems, solutions, guide, users, leaderboard, feed
 load_dotenv()
 
 app = FastAPI(
-    title="CogniChain API",
+    title="Puzzld API",
     description="Humans solve problems. AI guides. Tokens reward.",
     version="0.1.0",
 )
@@ -21,8 +21,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── CORS ─────────────────────────────────────────────────────
 _origins = [
-    "http://localhost:5173",
-    os.getenv("FRONTEND_URL", ""),
+    "http://localhost:5173",         # Vite dev server
+    "capacitor://localhost",         # Capacitor iOS webview
+    "https://localhost",             # Capacitor Android webview (androidScheme: https)
+    "http://localhost",              # Capacitor Android webview fallback
+    os.getenv("FRONTEND_URL", ""),   # Vercel / production web
 ]
 
 app.add_middleware(
@@ -43,4 +46,4 @@ app.include_router(feed.router,        prefix="/feed",        tags=["Feed"])
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "app": "CogniChain"}
+    return {"status": "ok", "app": "Puzzld"}

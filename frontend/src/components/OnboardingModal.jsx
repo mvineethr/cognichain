@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const STORAGE_KEY = 'cognichain_onboarded_v1'
+const STORAGE_KEY = 'puzzld_onboarded_v1'
 
 const STEPS = [
   {
     icon:  '👋',
-    title: 'Welcome to CogniChain',
+    title: 'Welcome to Puzzld',
     body:  'A place to sharpen your thinking with daily problems — math, science, logic, puzzles, and more.',
   },
   {

@@ -69,7 +69,7 @@ export default function Login() {
     }}>
       <div style={{ maxWidth: '400px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>⚡ CogniChain</h1>
+          <h1 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>🧩 Puzzld</h1>
           <p className="text-secondary">Solve problems. Earn points. Think deeply.</p>
         </div>
 

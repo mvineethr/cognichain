@@ -1,7 +1,26 @@
-/* ── CogniChain Global Styles ─────────────────────────────────── */
+/* ── Puzzld Global Styles ─────────────────────────────────── */
 /* Updated: April 2026 — Pastel palette, Navy gradient, Space Grotesk + Syne + Space Mono */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+/* ── Safe area insets (Capacitor / notch / home-indicator) ── */
+:root {
+  --safe-top:    env(safe-area-inset-top,    0px);
+  --safe-right:  env(safe-area-inset-right,  0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left:   env(safe-area-inset-left,   0px);
+}
+
+/* Push content below the status bar and above the home indicator */
+body {
+  padding-top:    var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+}
+
+/* Sidebar gets left-safe padding on landscape notch devices */
+.sidebar {
+  padding-left: max(1rem, calc(1rem + var(--safe-left)));
+}
 
 * {
   margin: 0;
